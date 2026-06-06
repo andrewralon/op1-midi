@@ -6,6 +6,7 @@
 - [ ] Bidirectional CC sync: OP-1 → UI (volume, pan, mute update the UI in real time, including on startup)
 
 ## To do
+- [ ] Play / Stop buttons in the header: send MIDI Start (0xFA) and Stop (0xFC) transport messages to the OP-1
 - [ ] Automation / fader conflict: manually moving a fader while automation is running should cancel that automation clip
 - [ ] Graceful MIDI disconnect: detect OP-1 unplug mid-session, show reconnect dialog instead of crashing
 - [ ] Preset saving: save/load slider positions and automation clips as JSON

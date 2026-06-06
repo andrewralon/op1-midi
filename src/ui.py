@@ -22,7 +22,7 @@ _PANEL    = "#1e1e1e"
 _ACCENT   = "#e8541a"
 _MUTE_OFF = "#2a2a2a"
 _TEXT     = "#d8d8d8"
-_DIM      = "#555555"
+_DIM      = "#aaaaaa"
 _GREEN    = "#4ec94e"
 
 # OP-1 Field per-track colors, matched from the device's mixer screen
@@ -128,40 +128,48 @@ class TrackStrip(QFrame):
         # Pan knob
         pan_lbl = QLabel("PAN")
         pan_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        pan_lbl.setStyleSheet(f"color: {_DIM}; font-size: 8pt;")
+        pan_lbl.setStyleSheet(f"color: {_DIM}; font-size: 8pt; font-weight: bold;")
         body.addWidget(pan_lbl)
+
+        # Range 0–128 (not 0–127): midpoint = 64 lands exactly at 12 o'clock,
+        # so the center notch tick is symmetric.  CC is clamped to 127 on send.
+        self._pan_dial = QDial()
+        self._pan_dial.setRange(0, 128)
+        self._pan_dial.setValue(64)
+        self._pan_dial.setNotchesVisible(True)
+        self._pan_dial.setWrapping(False)
+        self._pan_dial.setFixedSize(64, 64)
+        self._pan_dial.valueChanged.connect(self._on_pan_changed)
+
+        # Equal fixed-width L/R labels so the knob stays visually centred
+        _side_style = f"color: {_DIM}; font-size: 8pt; font-weight: bold;"
+        l_lbl = QLabel("L")
+        l_lbl.setFixedWidth(18)
+        l_lbl.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+        l_lbl.setStyleSheet(_side_style)
+
+        r_lbl = QLabel("R")
+        r_lbl.setFixedWidth(18)
+        r_lbl.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
+        r_lbl.setStyleSheet(_side_style)
 
         pan_row = QHBoxLayout()
         pan_row.setContentsMargins(0, 0, 0, 0)
-        pan_row.setSpacing(4)
-
-        for side in ("L", "R"):
-            lbl = QLabel(side)
-            lbl.setStyleSheet(f"color: {_DIM}; font-size: 7pt;")
-            if side == "L":
-                pan_row.addWidget(lbl, alignment=Qt.AlignmentFlag.AlignVCenter)
-                self._pan_dial = QDial()
-                self._pan_dial.setRange(0, 127)
-                self._pan_dial.setValue(64)
-                self._pan_dial.setNotchesVisible(True)
-                self._pan_dial.setWrapping(False)
-                self._pan_dial.setFixedSize(60, 60)
-                self._pan_dial.valueChanged.connect(self._on_pan_changed)
-                pan_row.addWidget(self._pan_dial, alignment=Qt.AlignmentFlag.AlignCenter)
-            else:
-                pan_row.addWidget(lbl, alignment=Qt.AlignmentFlag.AlignVCenter)
-
+        pan_row.setSpacing(2)
+        pan_row.addWidget(l_lbl)
+        pan_row.addWidget(self._pan_dial, alignment=Qt.AlignmentFlag.AlignCenter)
+        pan_row.addWidget(r_lbl)
         body.addLayout(pan_row)
 
         self._pan_val = QLabel("C")
         self._pan_val.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self._pan_val.setStyleSheet(f"color: {_DIM}; font-size: 8pt;")
+        self._pan_val.setStyleSheet(f"color: {_DIM}; font-size: 8pt; font-weight: bold;")
         body.addWidget(self._pan_val)
 
         # Volume fader
         vol_lbl = QLabel("VOLUME")
         vol_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        vol_lbl.setStyleSheet(f"color: {_DIM}; font-size: 8pt;")
+        vol_lbl.setStyleSheet(f"color: {_DIM}; font-size: 8pt; font-weight: bold;")
         body.addWidget(vol_lbl)
 
         # Qt vertical slider: min at bottom, max at top — correct fader orientation
@@ -177,7 +185,7 @@ class TrackStrip(QFrame):
 
         self._vol_val = QLabel("100")
         self._vol_val.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self._vol_val.setStyleSheet(f"color: {_DIM}; font-size: 8pt;")
+        self._vol_val.setStyleSheet(f"color: {_DIM}; font-size: 8pt; font-weight: bold;")
         body.addWidget(self._vol_val)
 
         outer.addLayout(body)
@@ -207,9 +215,10 @@ class TrackStrip(QFrame):
         )
 
     def _on_pan_changed(self, value: int) -> None:
-        self._pan_val.setText(_pan_label(value))
+        cc = min(value, 127)   # dial range is 0–128; clamp top end for MIDI
+        self._pan_val.setText(_pan_label(cc))
         if self._ready:
-            self._ctrl.set_pan(self._track, value)
+            self._ctrl.set_pan(self._track, cc)
 
     def _on_volume_changed(self, value: int) -> None:
         self._vol_val.setText(str(value))
@@ -375,7 +384,7 @@ class AutomationPanel(QFrame):
 
     def _dim_label(self, text: str) -> QLabel:
         lbl = QLabel(text)
-        lbl.setStyleSheet(f"color: {_DIM}; font-size: 8pt;")
+        lbl.setStyleSheet(f"color: {_DIM}; font-size: 8pt; font-weight: bold;")
         return lbl
 
     def _on_add(self) -> None:
@@ -476,7 +485,7 @@ class MainWindow(QMainWindow):
         root.addLayout(header)
 
         status = QLabel(f"● Connected: {port_name}")
-        status.setStyleSheet(f"color: {_GREEN}; font-size: 9pt;")
+        status.setStyleSheet(f"color: {_GREEN}; font-size: 9pt; font-weight: bold;")
         root.addWidget(status)
 
         sep = QFrame()
