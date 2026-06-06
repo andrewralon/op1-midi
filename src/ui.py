@@ -156,7 +156,7 @@ class WaveformPreview(QWidget):
         p.drawLine(QPointF(0.0, cy), QPointF(float(w), cy))
 
         # Cycles visible = how many full cycles fit in one beat at this rate
-        n_cycles = PPQN / self._rate_ticks   # float; e.g. 0.25 for rate 1, 8.0 for rate 8
+        n_cycles = 8.0 * PPQN / self._rate_ticks   # 2 beats of content; e.g. 0.5 for rate 1, 16.0 for rate 8
         steps    = w * 2
         pen = QPen(QColor(_ACCENT), 2)
         pen.setCapStyle(Qt.PenCapStyle.RoundCap)
