@@ -259,6 +259,7 @@ class TrackStrip(QFrame):
             self._pan_dial.blockSignals(True)
             self._pan_dial.setValue(value)
             self._pan_dial.blockSignals(False)
+            self._pan_dial.update()
 
     def update_from_cc(self, control: int, value: int) -> None:
         """Sync UI from a CC message received from the OP-1 — no CC sent back."""
@@ -271,6 +272,7 @@ class TrackStrip(QFrame):
             self._pan_dial.blockSignals(True)
             self._pan_dial.setValue(value)
             self._pan_dial.blockSignals(False)
+            self._pan_dial.update()
         elif control == CC_MUTE:
             muted = value >= 64
             self._ctrl.sync_mute_state(self._track, muted)
