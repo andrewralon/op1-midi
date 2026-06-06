@@ -204,19 +204,18 @@ class TrackStrip(QFrame):
             "   border: 1px solid #2e2e2e;"
             "}"
         )
-        self.setFixedWidth(148)
+        self.setFixedWidth(90)
 
         outer = QVBoxLayout(self)
         outer.setSpacing(0)
         outer.setContentsMargins(0, 0, 0, 0)
 
-        # Header = mute toggle button
+        # Header = mute toggle button (just the track number)
         hf = QFont()
-        hf.setPointSize(9)
+        hf.setPointSize(20)
         hf.setBold(True)
-        hf.setLetterSpacing(QFont.SpacingType.AbsoluteSpacing, 2.0)
 
-        self._mute_btn = QPushButton(f"TRACK  {self._track}")
+        self._mute_btn = QPushButton(f"{self._track}")
         self._mute_btn.setFont(hf)
         self._mute_btn.setCheckable(True)
         self._mute_btn.setFixedHeight(30)
@@ -226,16 +225,16 @@ class TrackStrip(QFrame):
 
         body = QVBoxLayout()
         body.setSpacing(8)
-        body.setContentsMargins(10, 10, 10, 10)
+        body.setContentsMargins(6, 8, 6, 8)
 
         # Pan knob with L / R flanking labels
-        _side = f"color: {_DIM}; font-size: 10pt; font-weight: bold;"
+        _side = f"color: {_DIM}; font-size: 8pt; font-weight: bold;"
         l_lbl = QLabel("L")
-        l_lbl.setFixedWidth(18)
+        l_lbl.setFixedWidth(10)
         l_lbl.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
         l_lbl.setStyleSheet(_side)
         r_lbl = QLabel("R")
-        r_lbl.setFixedWidth(18)
+        r_lbl.setFixedWidth(10)
         r_lbl.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
         r_lbl.setStyleSheet(_side)
 
@@ -244,7 +243,7 @@ class TrackStrip(QFrame):
         self._pan_dial.setValue(64)
         self._pan_dial.setNotchesVisible(False)
         self._pan_dial.setWrapping(False)
-        self._pan_dial.setFixedSize(64, 64)
+        self._pan_dial.setFixedSize(52, 52)
         self._pan_dial.valueChanged.connect(self._on_pan_changed)
 
         pan_row = QHBoxLayout()
@@ -255,7 +254,11 @@ class TrackStrip(QFrame):
         pan_row.addWidget(r_lbl)
         body.addLayout(pan_row)
 
-        # Volume fader
+        # Volume fader (left) + value (right), vertically centered
+        fader_row = QHBoxLayout()
+        fader_row.setSpacing(6)
+        fader_row.setContentsMargins(0, 0, 0, 0)
+
         self._vol_slider = QSlider(Qt.Orientation.Vertical)
         self._vol_slider.setRange(0, 127)
         self._vol_slider.setValue(100)
@@ -263,13 +266,29 @@ class TrackStrip(QFrame):
             QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Expanding
         )
         self._vol_slider.setMinimumHeight(110)
+        self._vol_slider.setFixedWidth(28)
+        self._vol_slider.setStyleSheet(
+            "QSlider::groove:vertical {"
+            "  width: 4px; background-color: #333333; border-radius: 2px;"
+            "}"
+            "QSlider::sub-page:vertical {"
+            f"  background-color: {_ACCENT}; border-radius: 2px; width: 4px;"
+            "}"
+            "QSlider::handle:vertical {"
+            "  background-color: #888888; border: none;"
+            "  width: 20px; height: 8px;"
+            "  margin: 0 -8px; border-radius: 3px;"
+            "}"
+        )
         self._vol_slider.valueChanged.connect(self._on_volume_changed)
-        body.addWidget(self._vol_slider, alignment=Qt.AlignmentFlag.AlignHCenter)
+        fader_row.addWidget(self._vol_slider)
 
         self._vol_val = QLabel(str(_midi_to_ui(100)))
         self._vol_val.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self._vol_val.setStyleSheet(f"color: {_DIM}; font-size: 10pt; font-weight: bold;")
-        body.addWidget(self._vol_val)
+        self._vol_val.setStyleSheet(f"color: {_TEXT}; font-size: 20pt; font-weight: bold;")
+        fader_row.addWidget(self._vol_val, alignment=Qt.AlignmentFlag.AlignVCenter)
+
+        body.addLayout(fader_row)
 
         outer.addLayout(body)
 
