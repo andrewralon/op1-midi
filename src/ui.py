@@ -275,7 +275,7 @@ class TrackStrip(QFrame):
 
         self._vol_slider = QSlider(Qt.Orientation.Vertical)
         self._vol_slider.setRange(0, 127)
-        self._vol_slider.setValue(100)
+        self._vol_slider.setValue(115)
         self._vol_slider.setSizePolicy(
             QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Expanding
         )
@@ -297,7 +297,7 @@ class TrackStrip(QFrame):
         self._vol_slider.valueChanged.connect(self._on_volume_changed)
         fader_row.addWidget(self._vol_slider)
 
-        self._vol_val = QLabel(str(_midi_to_ui(100)))
+        self._vol_val = QLabel(str(_midi_to_ui(115)))
         self._vol_val.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self._vol_val.setStyleSheet(f"color: {_TEXT}; font-size: 20pt; font-weight: bold;")
         fader_row.addWidget(self._vol_val, alignment=Qt.AlignmentFlag.AlignVCenter)
