@@ -1,13 +1,11 @@
 """PyQt6 mixer UI for the OP-1 Field controller."""
 
-import time
-
 from PyQt6.QtWidgets import (
     QMainWindow, QWidget, QHBoxLayout, QVBoxLayout,
     QLabel, QPushButton, QSlider, QDial, QFrame, QSizePolicy,
-    QApplication, QComboBox, QSpinBox, QListWidget, QListWidgetItem,
+    QApplication, QComboBox, QSpinBox, QDoubleSpinBox, QListWidget, QListWidgetItem,
 )
-from PyQt6.QtCore import Qt, QObject, pyqtSignal, QTimer, QPointF, QSize
+from PyQt6.QtCore import Qt, QObject, pyqtSignal, QPointF, QSize
 from PyQt6.QtGui import QFont, QColor, QPainter, QPen, QPixmap, QIcon
 
 from src.controller import Controller, CC_VOLUME, CC_MUTE, CC_PAN
@@ -643,23 +641,19 @@ class MainWindow(QMainWindow):
         engine: AutomationEngine,
         bridge: ClockBridge,
         port_name: str,
+        clock_gen,
     ) -> None:
         super().__init__()
         self._controller = controller
         self._clock      = clock
-        self._last_beat_time: float | None = None
         self._strips: dict[int, TrackStrip] = {}
-        self._setup_ui(controller, engine, port_name)
+        self._setup_ui(controller, engine, port_name, clock_gen)
 
         bridge.beat.connect(self._on_beat)
         bridge.automation_update.connect(self._on_automation_update)
         bridge.cc_received.connect(self._on_cc_received)
 
-        self._watchdog = QTimer(self)
-        self._watchdog.timeout.connect(self._check_clock_loss)
-        self._watchdog.start(500)
-
-    def _setup_ui(self, controller: Controller, engine: AutomationEngine, port_name: str) -> None:
+    def _setup_ui(self, controller: Controller, engine: AutomationEngine, port_name: str, clock_gen) -> None:
         self.setWindowTitle("OP-1 Field MIDI Controller")
         self.setMinimumSize(700, 600)
         self.setStyleSheet(f"QMainWindow {{ background-color: {_BG}; }}")
@@ -689,10 +683,10 @@ class MainWindow(QMainWindow):
         oct_left_btn = _make_btn("←")
         oct_right_btn = _make_btn("→")
 
-        play_btn.clicked.connect(controller.play)
-        stop_btn.clicked.connect(controller.stop)
-        oct_left_btn.clicked.connect(controller.octave_down)
-        oct_right_btn.clicked.connect(controller.octave_up)
+        play_btn.clicked.connect(clock_gen.play)
+        stop_btn.clicked.connect(clock_gen.stop)
+        oct_left_btn.clicked.connect(clock_gen.tape_prev_bar)
+        oct_right_btn.clicked.connect(clock_gen.tape_next_bar)
 
         transport_row = QHBoxLayout()
         transport_row.setSpacing(4)
@@ -721,9 +715,34 @@ class MainWindow(QMainWindow):
             self._strips[t] = strip
             tracks_row.addWidget(strip)
 
-        right_col = QWidget()
-        right_col.setFixedWidth(80)
-        tracks_row.addWidget(right_col)
+        bpm_widget = QWidget()
+        bpm_widget.setFixedWidth(100)
+        bpm_layout = QVBoxLayout(bpm_widget)
+        bpm_layout.setSpacing(4)
+        bpm_layout.setContentsMargins(2, 0, 2, 0)
+        bpm_layout.addStretch()
+
+        bpm_title = QLabel("BPM")
+        bpm_title.setStyleSheet(f"color: {_DIM}; font-size: 11pt; font-weight: bold;")
+        bpm_title.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        bpm_layout.addWidget(bpm_title)
+
+        bpm_spin = QDoubleSpinBox()
+        bpm_spin.setRange(20.0, 300.0)
+        bpm_spin.setDecimals(1)
+        bpm_spin.setSingleStep(1.0)
+        bpm_spin.setValue(120.0)
+        bpm_spin.setFixedWidth(96)
+        bpm_spin.setStyleSheet(
+            f"QDoubleSpinBox {{ color: {_TEXT}; background-color: {_BG};"
+            f"  font-size: 18pt; font-weight: bold; }}"
+        )
+        bpm_spin.valueChanged.connect(clock_gen.set_bpm)
+        bpm_spin.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        bpm_layout.addWidget(bpm_spin)
+
+        bpm_layout.addStretch()
+        tracks_row.addWidget(bpm_widget)
         tracks_row.addStretch()
         root.addLayout(tracks_row)
 
@@ -739,15 +758,6 @@ class MainWindow(QMainWindow):
         status.setStyleSheet(f"color: {_GREEN}; font-size: 11pt; font-weight: bold;")
         status_row.addWidget(status)
 
-        status_row.addStretch()
-
-        self._bpm_label = QLabel("BPM: --")
-        bf = QFont("Menlo", 12)
-        bf.setBold(True)
-        self._bpm_label.setFont(bf)
-        self._bpm_label.setStyleSheet(f"color: {_TEXT};")
-        status_row.addWidget(self._bpm_label)
-
         root.addLayout(status_row)
 
     # ------------------------------------------------------------------
@@ -755,10 +765,6 @@ class MainWindow(QMainWindow):
     # ------------------------------------------------------------------
 
     def _on_beat(self, beat_num: int) -> None:
-        self._last_beat_time = time.monotonic()
-        bpm = self._clock.bpm
-        if bpm is not None:
-            self._bpm_label.setText(f"BPM: {bpm:.1f}")
         self._lfo_panel.on_beat(beat_num)
 
     def _on_automation_update(self, track: int, param_name: str, value: int) -> None:
@@ -775,10 +781,3 @@ class MainWindow(QMainWindow):
         strip = self._strips.get(track)
         return strip.current_midi_value(param) if strip else 64
 
-    def _check_clock_loss(self) -> None:
-        if (
-            self._last_beat_time is not None
-            and time.monotonic() - self._last_beat_time > 3.0
-        ):
-            self._bpm_label.setText("BPM: --")
-            self._last_beat_time = None

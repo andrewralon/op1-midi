@@ -11,7 +11,7 @@ import sys
 from PyQt6.QtWidgets import QApplication, QMessageBox
 
 from src.midi_connection import connect
-from src.clock import ClockListener
+from src.clock import ClockListener, MidiClockGenerator
 from src.controller import Controller
 from src.automation import AutomationEngine, Parameter
 from src.ui import MainWindow, ClockBridge, apply_dark_theme
@@ -53,10 +53,17 @@ def main() -> None:
     )
     clock.start()
 
-    window = MainWindow(controller, clock, engine, bridge, port_name)
+    clock_gen = MidiClockGenerator(
+        out_port,
+        tick_callback=engine.on_tick,
+        beat_callback=on_beat,
+    )
+
+    window = MainWindow(controller, clock, engine, bridge, port_name, clock_gen)
     window.show()
 
     def on_quit() -> None:
+        clock_gen.shutdown()
         clock.stop()
         in_port.close()
         out_port.close()

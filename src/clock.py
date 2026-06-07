@@ -138,3 +138,111 @@ class ClockListener:
             self._tick_callback(tick_snap, beat_snap)
         if is_beat and self._beat_callback:
             self._beat_callback(beat_num)
+
+
+class MidiClockGenerator:
+    """
+    Outputs 24 PPQN MIDI clock, making this app the tempo master.
+
+    Clock ticks are sent continuously so slave devices can lock their tempo
+    display.  Call play() / stop() to send MIDI Start / Stop transport messages.
+    Callbacks mirror ClockListener's API so the same on_beat / on_tick handlers
+    in app.py can be reused without changes.
+    """
+
+    def __init__(
+        self,
+        port: mido.ports.BaseOutput,
+        tick_callback: Callable[[int, int], None] | None = None,
+        beat_callback: Callable[[int], None] | None = None,
+    ) -> None:
+        self._port          = port
+        self._tick_callback = tick_callback
+        self._beat_callback = beat_callback
+        self._bpm           = 120.0
+        self._lock          = threading.Lock()
+        self._running       = True
+        self._has_started   = False
+        self._playing       = False
+        self._spp_pos       = 0    # MIDI beats (1 beat = 6 ticks); tracks resume position
+        self._spp_tick_rem  = 0    # ticks accumulated toward next MIDI beat
+        self._tick_count    = 0
+        self._beat_count    = 0
+        self._thread = threading.Thread(target=self._run, daemon=True, name="ClockGenerator")
+        self._thread.start()
+
+    # ------------------------------------------------------------------
+    # Public API
+    # ------------------------------------------------------------------
+
+    @property
+    def bpm(self) -> float:
+        with self._lock:
+            return self._bpm
+
+    def set_bpm(self, bpm: float) -> None:
+        with self._lock:
+            self._bpm = max(20.0, min(300.0, float(bpm)))
+
+    def play(self) -> None:
+        """Send Start (0xFA) first time; Continue (0xFB) on subsequent presses."""
+        self._playing = True
+        if self._has_started:
+            self._port.send(mido.Message("continue"))
+        else:
+            self._port.send(mido.Message("start"))
+            self._has_started = True
+
+    def stop(self) -> None:
+        """Send MIDI Stop (0xFC) and freeze the SPP position."""
+        self._playing = False
+        self._port.send(mido.Message("stop"))
+
+    def tape_prev_bar(self) -> None:
+        """CC 82 + SPP: jump tape and sequencer position back one bar."""
+        self._port.send(mido.Message("control_change", channel=0, control=82, value=127))
+        with self._lock:
+            self._spp_pos = max(0, self._spp_pos - 16)
+            spp = self._spp_pos
+        self._port.send(mido.Message("songpos", pos=spp))
+
+    def tape_next_bar(self) -> None:
+        """CC 83 + SPP: jump tape and sequencer position forward one bar."""
+        self._port.send(mido.Message("control_change", channel=0, control=83, value=127))
+        with self._lock:
+            self._spp_pos += 16
+            spp = self._spp_pos
+        self._port.send(mido.Message("songpos", pos=spp))
+
+    def shutdown(self) -> None:
+        self._running = False
+
+    # ------------------------------------------------------------------
+    # Internal
+    # ------------------------------------------------------------------
+
+    def _run(self) -> None:
+        last_tick = time.perf_counter()
+        while self._running:
+            with self._lock:
+                bpm = self._bpm
+            tick_interval = 60.0 / (bpm * 24.0)
+            next_tick = last_tick + tick_interval
+            sleep_time = next_tick - time.perf_counter()
+            if sleep_time > 0:
+                time.sleep(sleep_time)
+            self._port.send(mido.Message("clock"))
+            self._tick_count += 1
+            if self._playing:
+                self._spp_tick_rem += 1
+                if self._spp_tick_rem >= 6:
+                    self._spp_tick_rem = 0
+                    self._spp_pos += 1
+            is_beat = self._tick_count % PPQN == 0
+            if is_beat:
+                self._beat_count += 1
+            if self._tick_callback:
+                self._tick_callback(self._tick_count, self._beat_count)
+            if is_beat and self._beat_callback:
+                self._beat_callback(self._beat_count)
+            last_tick = next_tick
