@@ -122,7 +122,7 @@ class WaveformPreview(QWidget):
         self._center     = 64
         self._phase      = 0.0
         self._rate_ticks = PPQN   # default: 1 cycle per beat
-        self.setFixedHeight(90)
+        self.setFixedHeight(65)
         self.setStyleSheet(
             f"background-color: {_BG};"
             "border: 1px solid #2e2e2e;"
@@ -676,34 +676,14 @@ class MainWindow(QMainWindow):
         root.setSpacing(12)
         root.setContentsMargins(18, 14, 18, 14)
 
-        # ── Track strips + status/BPM info column to the right ──
+        # ── Track strips, horizontally centered ──
         tracks_row = QHBoxLayout()
         tracks_row.setSpacing(10)
+        tracks_row.addStretch()
         for t in (1, 2, 3, 4):
             strip = TrackStrip(t, controller)
             self._strips[t] = strip
             tracks_row.addWidget(strip)
-
-        info_col = QVBoxLayout()
-        info_col.setSpacing(6)
-        info_col.setContentsMargins(16, 0, 0, 0)
-        info_col.addStretch()
-
-        status = QLabel(f"● Connected: {port_name}")
-        status.setStyleSheet(f"color: {_GREEN}; font-size: 11pt; font-weight: bold;")
-        info_col.addWidget(status)
-
-        info_col.addSpacing(10)
-
-        self._bpm_label = QLabel("BPM: --")
-        bf = QFont("Menlo", 20)
-        bf.setBold(True)
-        self._bpm_label.setFont(bf)
-        self._bpm_label.setStyleSheet(f"color: {_ACCENT};")
-        info_col.addWidget(self._bpm_label)
-
-        info_col.addStretch()
-        tracks_row.addLayout(info_col)
         tracks_row.addStretch()
         root.addLayout(tracks_row)
 
@@ -715,6 +695,25 @@ class MainWindow(QMainWindow):
         # ── LFO panel ──
         self._lfo_panel = LfoPanel(engine, self._clock, self._get_strip_value)
         root.addWidget(self._lfo_panel)
+
+        # ── Status bar ──
+        status_row = QHBoxLayout()
+        status_row.setContentsMargins(2, 4, 2, 0)
+
+        status = QLabel(f"● Connected: {port_name}")
+        status.setStyleSheet(f"color: {_GREEN}; font-size: 11pt; font-weight: bold;")
+        status_row.addWidget(status)
+
+        status_row.addStretch()
+
+        self._bpm_label = QLabel("BPM: --")
+        bf = QFont("Menlo", 16)
+        bf.setBold(True)
+        self._bpm_label.setFont(bf)
+        self._bpm_label.setStyleSheet(f"color: {_ACCENT};")
+        status_row.addWidget(self._bpm_label)
+
+        root.addLayout(status_row)
 
     # ------------------------------------------------------------------
     # Slots
