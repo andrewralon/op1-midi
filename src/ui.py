@@ -438,13 +438,11 @@ class LfoPanel(QFrame):
         self._preview = WaveformPreview()
         root.addWidget(self._preview)
 
-        # ── Row 3: Range readout (below canvas, clearly outside it) ──
         self._range_label = QLabel()
         self._range_label.setStyleSheet(f"color: {_DIM}; font-size: 9pt;")
-        self._range_label.setAlignment(Qt.AlignmentFlag.AlignRight)
-        root.addWidget(self._range_label)
+        self._range_label.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
 
-        # ── Row 4: Rate / Depth / Center ──
+        # ── Row 3: Rate / Depth / Center ──
         params_row = QHBoxLayout()
         params_row.setSpacing(6)
 
@@ -496,6 +494,7 @@ class LfoPanel(QFrame):
         params_row.addSpacing(6)
         params_row.addWidget(use_cur_btn)
         params_row.addStretch()
+        params_row.addWidget(self._range_label)
         root.addLayout(params_row)
 
         # ── Row 5: action buttons ──
@@ -536,11 +535,6 @@ class LfoPanel(QFrame):
         root.addLayout(action_row)
 
         # ── Row 6: active LFO list ──
-        sep = QFrame()
-        sep.setFrameShape(QFrame.Shape.HLine)
-        sep.setStyleSheet("border: none; background-color: #333333; max-height: 1px;")
-        root.addWidget(sep)
-
         root.addWidget(self._dim_label("Active LFOs"))
 
         self._lfo_list = QListWidget()
@@ -687,11 +681,6 @@ class MainWindow(QMainWindow):
         tracks_row.addStretch()
         root.addLayout(tracks_row)
 
-        sep = QFrame()
-        sep.setFrameShape(QFrame.Shape.HLine)
-        sep.setStyleSheet("border: none; background-color: #2a2a2a; max-height: 1px;")
-        root.addWidget(sep)
-
         # ── LFO panel ──
         self._lfo_panel = LfoPanel(engine, self._clock, self._get_strip_value)
         root.addWidget(self._lfo_panel)
@@ -707,10 +696,10 @@ class MainWindow(QMainWindow):
         status_row.addStretch()
 
         self._bpm_label = QLabel("BPM: --")
-        bf = QFont("Menlo", 16)
+        bf = QFont("Menlo", 12)
         bf.setBold(True)
         self._bpm_label.setFont(bf)
-        self._bpm_label.setStyleSheet(f"color: {_ACCENT};")
+        self._bpm_label.setStyleSheet(f"color: {_TEXT};")
         status_row.addWidget(self._bpm_label)
 
         root.addLayout(status_row)

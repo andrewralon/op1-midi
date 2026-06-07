@@ -47,7 +47,7 @@ The last 24 tick intervals are averaged to smooth jitter.
 | CC | Function | Range | Notes |
 |----|----------|-------|-------|
 | 7  | Volume   | 0–127 | |
-| 9  | Mute     | 0 / 127 | 127 = muted, 0 = unmuted |
+| 9  | Mute     | 0-127 | >= 64 = muted |
 | 10 | Pan      | 0–127 | 64 = center |
 
 Tracks 1–4 map to MIDI channels 1–4.

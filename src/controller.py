@@ -77,6 +77,10 @@ class Controller:
         with self._lock:
             return self._muted[track]
 
+    def play(self) -> None:
+        """Send MIDI Start (0xFA) to the OP-1."""
+        self._port.send(mido.Message("start"))
+
     def stop(self) -> None:
         """Send MIDI Stop (0xFC) to the OP-1."""
         self._port.send(mido.Message("stop"))
