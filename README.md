@@ -1,8 +1,13 @@
-# op1-midi
+# op1-lfo
 
-![op1-midi app screenshot](images/SCR-20260607-ktht.png)
+![op1-lfo beat match mode](images/ss-beat-match.png)
+![op1-lfo midi sync mode](images/ss-midi-sync.png)
 
-A desktop app for controlling the Teenage Engineering OP-1 Field synthesizer over USB-C MIDI with LFOs (low frequency oscillators). Acts as the MIDI clock master — generating tempo, transport, and tape navigation — while providing per-track volume, pan, and mute controls with optional automation curves.
+Custom MIDI LFOs (low frequency oscillators) for the Teenage Engineering OP-1 Field synthesizer to control per-track volume, pan, and mute with automation curves. 
+
+This app handles two different MIDI clock tempo modes:
+1. Beat Match -> OP1 sends clock to app: used to sync the LFOs
+2. Midi Sync -> app sends clock to OP1: generates tempo, transport, and tape navigation commands
 
 ---
 
