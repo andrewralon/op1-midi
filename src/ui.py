@@ -670,7 +670,7 @@ class MainWindow(QMainWindow):
         bridge.cc_received.connect(self._on_cc_received)
 
     def _setup_ui(self, controller: Controller, engine: AutomationEngine, port_name: str, clock_gen) -> None:
-        self.setWindowTitle("OP-1 Field MIDI Controller")
+        self.setWindowTitle("OP-1 Field LFO Hero")
         self.setMinimumSize(700, 600)
         self.setStyleSheet(f"QMainWindow {{ background-color: {_BG}; }}")
 
