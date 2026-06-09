@@ -34,13 +34,13 @@ _BLUE_1     = "#4477bb" # button 1
 _OCHRE_2    = "#bb9933" # button 2
 _GRAY_3     = "#848C94" # button 3
 _ORANGE_4   = "#ff6a00" # button 4
-_STEELBLUE2 = "#132542"
-_OCHRE2     = "#fddf28"
-_OCHRE3     = "#b68e5a"
-_BLUEGRAY2  = "#5c5c74"
-_ORANGE2    = "#ff5349"
+_BLUESTEEL  = "#132542"
+_GOLD       = "#fddf28"
+_BLUEGRAY   = "#5c5c74"
+_ORANGERED  = "#ff5349"
 _GRAY       = "#555555"
 _GREEN      = "#4ec94e"
+_DARKGREEN  = "#1e4a1e"
 _RED        = "#ff4444"
 
 # OP-1 Field per-track colors, matched from the device's mixer screen
