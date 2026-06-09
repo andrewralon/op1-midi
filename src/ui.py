@@ -217,7 +217,9 @@ class WaveformPreview(QWidget):
         amplitude = h / 2.0 - pad
 
         # Center dashed line
-        p.setPen(QPen(QColor(_KNOB_RIM), 1, Qt.PenStyle.DashLine))
+        _dash_pen = QPen(QColor(_KNOB_RIM), 1, Qt.PenStyle.CustomDashLine)
+        _dash_pen.setDashPattern([4, 8])
+        p.setPen(_dash_pen)
         p.drawLine(QPointF(0.0, cy), QPointF(float(w), cy))
 
         # Cycles visible = how many full cycles fit in one beat at this rate
@@ -585,9 +587,14 @@ class LfoPanel(QFrame):
         params_row.addWidget(self._range_label)
         root.addLayout(params_row)
 
-        # ── Row 5: action buttons ──
-        action_row = QHBoxLayout()
-        action_row.setSpacing(8)
+        # ── Rows 5+6: action buttons (left) + Active LFOs (right) ──
+        bottom_row = QHBoxLayout()
+        bottom_row.setSpacing(12)
+        bottom_row.setContentsMargins(0, 0, 0, 0)
+
+        btn_col = QVBoxLayout()
+        btn_col.setSpacing(6)
+        btn_col.setContentsMargins(0, 0, 0, 0)
 
         start_btn = QPushButton("▶  Start")
         start_btn.setFixedHeight(28)
@@ -598,40 +605,44 @@ class LfoPanel(QFrame):
         )
         start_btn.clicked.connect(self._on_start)
 
-        stop_sel_btn = QPushButton("✕  Stop Selected")
-        stop_sel_btn.setFixedHeight(28)
-        stop_sel_btn.setStyleSheet(
+        stop_btn = QPushButton("■  Stop")
+        stop_btn.setFixedHeight(28)
+        stop_btn.setStyleSheet(
             f"QPushButton {{ background-color: {_HOVER}; color: {_TEXT};"
             f"  border: none; border-radius: 4px; font-size: 11pt; padding: 0px 14px; }}"
             f"QPushButton:hover {{ background-color: {_KNOB_RIM}; }}"
         )
-        stop_sel_btn.clicked.connect(self._on_stop_selected)
+        stop_btn.clicked.connect(self._on_stop_selected)
 
-        stop_all_btn = QPushButton("✕  Stop All")
-        stop_all_btn.setFixedHeight(28)
-        stop_all_btn.setStyleSheet(
-            f"QPushButton {{ background-color: {_HOVER}; color: {_DIM};"
+        clear_btn = QPushButton("✕  Clear")
+        clear_btn.setFixedHeight(28)
+        clear_btn.setStyleSheet(
+            f"QPushButton {{ background-color: {_HOVER}; color: {_TEXT};"
             f"  border: none; border-radius: 4px; font-size: 11pt; padding: 0px 14px; }}"
-            f"QPushButton:hover {{ background-color: {_KNOB_RIM}; color: {_TEXT}; }}"
+            f"QPushButton:hover {{ background-color: {_KNOB_RIM}; }}"
         )
-        stop_all_btn.clicked.connect(self._on_stop_all)
+        clear_btn.clicked.connect(self._on_stop_all)
 
-        action_row.addWidget(start_btn)
-        action_row.addWidget(stop_sel_btn)
-        action_row.addWidget(stop_all_btn)
-        action_row.addStretch()
-        root.addLayout(action_row)
+        btn_col.addWidget(start_btn)
+        btn_col.addWidget(stop_btn)
+        btn_col.addWidget(clear_btn)
 
-        # ── Row 6: active LFO list ──
-        root.addWidget(self._dim_label("Active LFOs"))
+        lfo_col = QVBoxLayout()
+        lfo_col.setSpacing(4)
+        lfo_col.setContentsMargins(0, 0, 0, 0)
+        lfo_col.addWidget(self._dim_label("Active LFOs"))
 
         self._lfo_list = QListWidget()
         self._lfo_list.setStyleSheet(
             f"QListWidget {{ background-color: {_BG}; color: {_TEXT};"
             f"  border: 1px solid {_BORDER}; border-radius: 4px; font-size: 10pt; }}"
         )
-        self._lfo_list.setMaximumHeight(70)
-        root.addWidget(self._lfo_list)
+        self._lfo_list.setFixedHeight(72)
+        lfo_col.addWidget(self._lfo_list)
+
+        bottom_row.addLayout(btn_col)
+        bottom_row.addLayout(lfo_col, stretch=1)
+        root.addLayout(bottom_row)
 
         # Wire up live preview
         self._wave_combo.currentTextChanged.connect(self._update_preview)
@@ -663,13 +674,13 @@ class LfoPanel(QFrame):
             if btn.isChecked():
                 style = (
                     f"QPushButton {{ background-color: {color}; color: {_BLACK};"
-                    f"  border: none; border-radius: 4px; font-size: 11pt; font-weight: bold; }}"
+                    f"  border: none; border-radius: 4px; font-size: 14pt; font-weight: bold; }}"
                     f"QPushButton:hover {{ background-color: {color}; }}"
                 )
             else:
                 style = (
                     f"QPushButton {{ background-color: {_HOVER}; color: {_TEXT};"
-                    f"  border: none; border-radius: 4px; font-size: 11pt; font-weight: bold; }}"
+                    f"  border: none; border-radius: 4px; font-size: 14pt; font-weight: bold; }}"
                     f"QPushButton:hover {{ background-color: {_KNOB_RIM}; }}"
                 )
             btn.setStyleSheet(style)
