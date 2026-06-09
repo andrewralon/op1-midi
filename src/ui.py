@@ -26,7 +26,7 @@ from src.automation import (
 # ---------------------------------------------------------------------------
 _BG       = "#111111"
 _PANEL    = "#1e1e1e"
-_ACCENT   = "#e8541a"
+_ACCENT   = "#4ec94e"
 _MUTE_OFF = "#2a2a2a"
 _TEXT     = "#d8d8d8"
 _DIM      = "#aaaaaa"
@@ -46,29 +46,30 @@ TRACK_COLORS = {
 # ---------------------------------------------------------------------------
 
 class TempoMode(Enum):
-    UNKNOWN       = auto()
-    BEAT_MATCH    = auto()
-    MIDI_SYNC     = auto()
-    FREE          = auto()
-    PO_SYNC       = auto()
-    ONE_SIXTEENTH = auto()
+    APP_CLOCK     = auto()  # auto-detected: OP-1 silent (FREE or MIDI SYNC)
+    BEAT_MATCH    = auto()  # auto-detected: OP-1 sending clock (BEAT MATCH, PO SYNC, or 1/16)
+    MIDI_SYNC     = auto()  # manual sub-mode
+    FREE          = auto()  # manual sub-mode
+    PO_SYNC       = auto()  # manual sub-mode
+    ONE_SIXTEENTH = auto()  # manual sub-mode
 
 _MODE_LABEL: dict[TempoMode, str] = {
-    TempoMode.UNKNOWN:       "UNKNOWN",
-    TempoMode.BEAT_MATCH:    "BEAT MATCH",
+    TempoMode.APP_CLOCK:     "app (FREE or MIDI SYNC)",
+    TempoMode.BEAT_MATCH:    "op1 (BEAT MATCH, PO SYNC, or 1/16 SYNC)",
     TempoMode.MIDI_SYNC:     "MIDI SYNC",
     TempoMode.FREE:          "FREE",
     TempoMode.PO_SYNC:       "PO SYNC",
-    TempoMode.ONE_SIXTEENTH: "1/16",
+    TempoMode.ONE_SIXTEENTH: "1/16 SYNC",
 }
 
-# Modes the user can cycle through manually (Beat Match is auto-detected only)
+# Full cycle for the mode button — all modes reachable manually
 _MANUAL_CYCLE: list[TempoMode] = [
+    TempoMode.APP_CLOCK,
     TempoMode.MIDI_SYNC,
     TempoMode.FREE,
     TempoMode.PO_SYNC,
     TempoMode.ONE_SIXTEENTH,
-    TempoMode.UNKNOWN,
+    TempoMode.BEAT_MATCH, 
 ]
 
 
@@ -865,7 +866,10 @@ class MainWindow(QMainWindow):
 
         status_row.addStretch()
 
-        self._mode_btn = QPushButton("Beat Mode: " + _MODE_LABEL[TempoMode.UNKNOWN])
+        mode_lbl = QLabel("Tempo Mode:")
+        mode_lbl.setStyleSheet(f"color: {_DIM}; font-size: 11pt; font-weight: bold;")
+
+        self._mode_btn = QPushButton(_MODE_LABEL[TempoMode.APP_CLOCK])
         self._mode_btn.setStyleSheet(
             f"QPushButton {{ color: {_DIM}; background-color: transparent;"
             f"  border: 1px solid #333333; border-radius: 4px;"
@@ -873,12 +877,18 @@ class MainWindow(QMainWindow):
             f"QPushButton:hover {{ border-color: #555555; }}"
         )
         self._mode_btn.clicked.connect(self._toggle_mode)
-        status_row.addWidget(self._mode_btn)
+
+        mode_row = QHBoxLayout()
+        mode_row.setSpacing(4)
+        mode_row.setContentsMargins(0, 0, 0, 0)
+        mode_row.addWidget(mode_lbl)
+        mode_row.addWidget(self._mode_btn)
+        status_row.addLayout(mode_row)
 
         root.addLayout(status_row)
 
         # ── Mode detection timer ──
-        self._tempo_mode = TempoMode.UNKNOWN
+        self._tempo_mode = TempoMode.APP_CLOCK
         self._startup_detection_done = False
         self._mode_timer = QTimer(self)
         self._mode_timer.timeout.connect(self._poll_mode)
@@ -890,16 +900,17 @@ class MainWindow(QMainWindow):
 
     def _set_mode(self, mode: TempoMode) -> None:
         self._tempo_mode = mode
-        label = "Tempo Mode: " + _MODE_LABEL[mode]
+        label = _MODE_LABEL[mode]
 
         if mode == TempoMode.BEAT_MATCH:
+            # OP-1 is clock master — disable our clock output, BPM is read-only
             self._clock_gen.disable_clock()
             self._mode_btn.setText(label)
             self._mode_btn.setStyleSheet(
-                f"QPushButton {{ color: {_ACCENT}; background-color: transparent;"
-                f"  border: 1px solid {_ACCENT}; border-radius: 4px;"
+                f"QPushButton {{ color: {_GREEN}; background-color: transparent;"
+                f"  border: 1px solid {_GREEN}; border-radius: 4px;"
                 f"  font-size: 11pt; font-weight: bold; padding: 2px 8px; }}"
-                f"QPushButton:hover {{ background-color: #2a1510; }}"
+                f"QPushButton:hover {{ background-color: #0f2a0f; }}"
             )
             self._bpm_spin.setReadOnly(True)
             self._bpm_spin.setButtonSymbols(QAbstractSpinBox.ButtonSymbols.NoButtons)
@@ -907,14 +918,15 @@ class MainWindow(QMainWindow):
                 f"QDoubleSpinBox {{ color: {_DIM}; background-color: {_BG};"
                 f"  font-size: 18pt; font-weight: bold; }}"
             )
-        elif mode == TempoMode.MIDI_SYNC:
+        elif mode in (TempoMode.APP_CLOCK, TempoMode.MIDI_SYNC):
+            # App is clock master — enable our clock output, BPM is editable
             self._clock_gen.enable_clock()
             self._mode_btn.setText(label)
             self._mode_btn.setStyleSheet(
-                f"QPushButton {{ color: {_TEXT}; background-color: transparent;"
-                f"  border: 1px solid #555555; border-radius: 4px;"
+                f"QPushButton {{ color: {_GREEN}; background-color: transparent;"
+                f"  border: 1px solid {_GREEN}; border-radius: 4px;"
                 f"  font-size: 11pt; font-weight: bold; padding: 2px 8px; }}"
-                f"QPushButton:hover {{ border-color: #888888; }}"
+                f"QPushButton:hover {{ background-color: #0f2a0f; }}"
             )
             self._bpm_spin.setReadOnly(False)
             self._bpm_spin.setButtonSymbols(QAbstractSpinBox.ButtonSymbols.UpDownArrows)
@@ -923,7 +935,7 @@ class MainWindow(QMainWindow):
                 f"  font-size: 18pt; font-weight: bold; }}"
             )
         else:
-            # UNKNOWN / FREE / PO_SYNC / ONE_SIXTEENTH — no clock output
+            # FREE / PO_SYNC / ONE_SIXTEENTH — no clock output
             self._clock_gen.disable_clock()
             self._mode_btn.setText(label)
             self._mode_btn.setStyleSheet(
@@ -942,10 +954,7 @@ class MainWindow(QMainWindow):
     def _toggle_mode(self) -> None:
         self._startup_detection_done = True  # manual override locks in the choice
         current = self._tempo_mode
-        if current in _MANUAL_CYCLE:
-            idx = (_MANUAL_CYCLE.index(current) + 1) % len(_MANUAL_CYCLE)
-        else:
-            idx = 0  # Beat Match → cycle back to Unknown
+        idx = (_MANUAL_CYCLE.index(current) + 1) % len(_MANUAL_CYCLE) if current in _MANUAL_CYCLE else 0
         self._set_mode(_MANUAL_CYCLE[idx])
 
     def _poll_mode(self) -> None:
@@ -958,8 +967,9 @@ class MainWindow(QMainWindow):
             self._set_mode(TempoMode.BEAT_MATCH)
             QTimer.singleShot(5500, self._print_startup_log)
         elif not self._startup_detection_done:
-            # First poll with no incoming ticks — mode stays UNKNOWN until user picks
+            # First poll with no incoming ticks → OP-1 is in APP_CLOCK group
             self._startup_detection_done = True
+            self._set_mode(TempoMode.APP_CLOCK)
             QTimer.singleShot(5500, self._print_startup_log)
 
         if self._tempo_mode == TempoMode.BEAT_MATCH:
