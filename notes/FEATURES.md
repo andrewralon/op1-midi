@@ -6,7 +6,6 @@
 - [ ] Automation / fader conflict: manually moving a fader while automation is running should cancel that automation clip
 - [ ] Graceful MIDI disconnect: detect OP-1 unplug mid-session, update UI to reflect disconnected state, show reconnect dialog instead of crashing
 - [ ] Preset saving: save/load slider positions and automation clips as JSON
-- [ ] Startup tempo mode detection: detect whether OP-1 is in Beat Match or MIDI Sync mode at launch and set the UI accordingly (Beat Match auto-detected; MIDI Sync/Free/PO Sync/1/16 indistinguishable via MIDI — startup log added to help test empirically)
 - [ ] BPM as LFO target: expose BPM as an automation parameter so LFOs can modulate app (and therefore OP-1 clock) tempo
 - [ ] Per-track FX + LFO params: add OP-1 MIDI CC params for per-track FX controls and per-track LFO settings (see OP-1 MIDI spec)
 - [ ] Master FX params: add OP-1 MIDI CC params for master FX controls (see OP-1 MIDI spec)
@@ -14,6 +13,7 @@
 
 ## Not possible
 - ✗ OP-1 → App sync: the OP-1 Field does not transmit CC messages when its mixer controls are changed, so there is no way to detect volume, pan, or mute state from the device side over MIDI
+- ✗ Startup tempo mode detection: MIDI only exposes two groups — OP-1 sending clock (Beat Match / PO Sync / 1/16) vs silent (FREE / MIDI Sync). Modes within each group are indistinguishable; jitter overlap rules out finer discrimination. The app now auto-detects the two groups and labels them accordingly. Full empirical results in RESEARCH.md.
 
 ## Done
 - [x] Project scaffold (venv, requirements.txt, .gitignore, src/ layout)

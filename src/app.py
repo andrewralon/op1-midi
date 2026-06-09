@@ -89,6 +89,7 @@ def main() -> None:
     out_port.send(mido.Message("sysex", data=[0x7E, 0x7F, 0x06, 0x01]))
 
     window = MainWindow(controller, clock, engine, bridge, port_name, clock_gen)
+    window.move(0, 0)
     window.show()
 
     def on_quit() -> None:
