@@ -508,7 +508,7 @@ class LfoPanel(QFrame):
         hdr.addSpacing(12)
         self._invert_check = QCheckBox("Invert 2nd+")
         self._invert_check.setStyleSheet(
-            f"QCheckBox {{ color: {_TEXT}; font-size: 10pt; }}"
+            f"QCheckBox {{ color: {_TEXT}; font-size: 12pt; }}"
             f"QCheckBox::indicator {{ border: 1px solid {_KNOB_RIM}; border-radius: 3px;"
             f"  background-color: {_PANEL}; width: 13px; height: 13px; }}"
             f"QCheckBox::indicator:checked {{ background-color: {_PANEL}; border-color: {_KNOB_RIM}; image: url({_CHECKMARK_SVG}); }}"
@@ -544,7 +544,7 @@ class LfoPanel(QFrame):
         self._rate_spin.setStyleSheet(_spin_style)
 
         self._rate_desc_lbl = QLabel(_RATE_DESC[3])
-        self._rate_desc_lbl.setStyleSheet(f"color: {_DIM}; font-size: 9pt;")
+        self._rate_desc_lbl.setStyleSheet(f"color: {_DIM}; font-size: 11pt;")
         self._rate_spin.valueChanged.connect(
             lambda v: self._rate_desc_lbl.setText(_RATE_DESC[v])
         )
@@ -563,11 +563,11 @@ class LfoPanel(QFrame):
         self._center_spin.setStyleSheet(_spin_style)
 
         use_cur_btn = QPushButton("Use current")
-        use_cur_btn.setFixedHeight(26)
         use_cur_btn.setStyleSheet(
-            f"QPushButton {{ background-color: {_MUTE_OFF}; color: {_TEXT};"
-            f"  border: none; border-radius: 4px; font-size: 10pt; }}"
-            f"QPushButton:hover {{ background-color: {_HOVER}; }}"
+            f"QPushButton {{ background-color: {_HOVER}; color: {_TEXT};"
+            f"  border: none; border-radius: 4px; font-size: 12pt;"
+            f"  padding: 4px 14px; }}"
+            f"QPushButton:hover {{ background-color: {_KNOB_RIM}; }}"
         )
         use_cur_btn.clicked.connect(self._on_use_current)
 
@@ -602,18 +602,18 @@ class LfoPanel(QFrame):
         stop_sel_btn = QPushButton("✕  Stop Selected")
         stop_sel_btn.setFixedHeight(28)
         stop_sel_btn.setStyleSheet(
-            f"QPushButton {{ background-color: {_MUTE_OFF}; color: {_TEXT};"
+            f"QPushButton {{ background-color: {_HOVER}; color: {_TEXT};"
             f"  border: none; border-radius: 4px; font-size: 11pt; padding: 0px 14px; }}"
-            f"QPushButton:hover {{ background-color: {_HOVER}; }}"
+            f"QPushButton:hover {{ background-color: {_KNOB_RIM}; }}"
         )
         stop_sel_btn.clicked.connect(self._on_stop_selected)
 
         stop_all_btn = QPushButton("✕  Stop All")
         stop_all_btn.setFixedHeight(28)
         stop_all_btn.setStyleSheet(
-            f"QPushButton {{ background-color: {_MUTE_OFF}; color: {_DIM};"
+            f"QPushButton {{ background-color: {_HOVER}; color: {_DIM};"
             f"  border: none; border-radius: 4px; font-size: 11pt; padding: 0px 14px; }}"
-            f"QPushButton:hover {{ background-color: {_HOVER}; color: {_TEXT}; }}"
+            f"QPushButton:hover {{ background-color: {_KNOB_RIM}; color: {_TEXT}; }}"
         )
         stop_all_btn.clicked.connect(self._on_stop_all)
 
@@ -654,7 +654,7 @@ class LfoPanel(QFrame):
 
     def _dim_label(self, text: str) -> QLabel:
         lbl = QLabel(text)
-        lbl.setStyleSheet(f"color: {_DIM}; font-size: 10pt; font-weight: bold;")
+        lbl.setStyleSheet(f"color: {_DIM}; font-size: 12pt; font-weight: bold;")
         return lbl
 
     def _update_track_btn_styles(self) -> None:
@@ -669,9 +669,9 @@ class LfoPanel(QFrame):
                 )
             else:
                 style = (
-                    f"QPushButton {{ background-color: {_MUTE_OFF}; color: {_DIM};"
+                    f"QPushButton {{ background-color: {_HOVER}; color: {_TEXT};"
                     f"  border: none; border-radius: 4px; font-size: 11pt; font-weight: bold; }}"
-                    f"QPushButton:hover {{ background-color: {_HOVER}; }}"
+                    f"QPushButton:hover {{ background-color: {_KNOB_RIM}; }}"
                 )
             btn.setStyleSheet(style)
 
