@@ -53,7 +53,9 @@ _GREEN      = "#4ec94e"
 _DARKGREEN  = "#1e4a1e"
 _RED        = "#ff4444"
 
-_CHECKMARK_SVG = os.path.join(os.path.dirname(os.path.abspath(__file__)), "assets", "checkmark.svg").replace("\\", "/")
+_CHECKMARK_SVG  = os.path.join(os.path.dirname(os.path.abspath(__file__)), "assets", "checkmark.svg").replace("\\", "/")
+_ARROW_UP_SVG   = os.path.join(os.path.dirname(os.path.abspath(__file__)), "assets", "arrow_up.svg").replace("\\", "/")
+_ARROW_DOWN_SVG = os.path.join(os.path.dirname(os.path.abspath(__file__)), "assets", "arrow_down.svg").replace("\\", "/")
 
 # OP-1 Field per-track colors, matched from the device's mixer screen
 TRACK_COLORS = {
@@ -472,7 +474,7 @@ class LfoPanel(QFrame):
 
         # ── Row 1: title + Track buttons / Param / Wave ──
         hdr = QHBoxLayout()
-        hdr.setSpacing(8)
+        hdr.setSpacing(0)
 
         title = QLabel("LFO")
         tf = QFont()
@@ -482,10 +484,11 @@ class LfoPanel(QFrame):
         title.setStyleSheet(f"color: {_DIM};")
         hdr.addWidget(title)
 
-        hdr.addSpacing(8)
+        hdr.addStretch(1)
 
         # Track toggle buttons — create before wiring signals to avoid premature callbacks
         hdr.addWidget(self._dim_label("Tracks"))
+        hdr.addSpacing(6)
         self._track_btns: dict[int, QPushButton] = {}
         for t in (1, 2, 3, 4):
             btn = QPushButton(str(t))
@@ -494,18 +497,23 @@ class LfoPanel(QFrame):
             btn.setFixedSize(28, 28)
             self._track_btns[t] = btn
             hdr.addWidget(btn)
+            if t < 4:
+                hdr.addSpacing(4)
 
-        hdr.addSpacing(16)
+        hdr.addStretch(1)
         self._param_combo = self._make_combo(list(PARAMETER_LABELS))
         self._wave_combo  = self._make_combo(list(LFO_WAVE_LABELS))
 
         hdr.addWidget(self._dim_label("Param"))
+        hdr.addSpacing(6)
         hdr.addWidget(self._param_combo)
-        hdr.addSpacing(16)
+
+        hdr.addStretch(1)
         hdr.addWidget(self._dim_label("Wave"))
+        hdr.addSpacing(6)
         hdr.addWidget(self._wave_combo)
 
-        hdr.addStretch()
+        hdr.addStretch(1)
         self._invert_check = QCheckBox("Invert 2nd+")
         self._invert_check.setStyleSheet(
             f"QCheckBox {{ color: {_TEXT}; font-size: 12pt; }}"
@@ -514,8 +522,6 @@ class LfoPanel(QFrame):
             f"QCheckBox::indicator:checked {{ background-color: {_PANEL}; border-color: {_KNOB_RIM}; image: url({_CHECKMARK_SVG}); }}"
         )
         hdr.addWidget(self._invert_check)
-
-        hdr.addStretch()
         root.addLayout(hdr)
 
         # Wire track buttons and set initial styles now that invert_check exists
@@ -535,12 +541,23 @@ class LfoPanel(QFrame):
         params_row = QHBoxLayout()
         params_row.setSpacing(6)
 
-        _spin_style = f"color: {_TEXT}; background-color: {_BG}; font-size: 11pt;"
+        _spin_style = (
+            f"QSpinBox {{ color: {_TEXT}; background-color: {_BG};"
+            f"  border: 1px solid {_DIM}; border-radius: 4px;"
+            f"  font-size: 13pt; padding: 2px 4px; }}"
+            f"QSpinBox::up-button {{ subcontrol-origin: border; subcontrol-position: top right;"
+            f"  width: 16px; background-color: {_BG}; border-left: 1px solid {_DIM};"
+            f"  border-bottom: 1px solid {_DIM}; }}"
+            f"QSpinBox::down-button {{ subcontrol-origin: border; subcontrol-position: bottom right;"
+            f"  width: 16px; background-color: {_BG}; border-left: 1px solid {_DIM}; }}"
+            f"QSpinBox::up-arrow {{ image: url({_ARROW_UP_SVG}); width: 8px; height: 5px; }}"
+            f"QSpinBox::down-arrow {{ image: url({_ARROW_DOWN_SVG}); width: 8px; height: 5px; }}"
+        )
 
         self._rate_spin = QSpinBox()
         self._rate_spin.setRange(1, 8)
         self._rate_spin.setValue(3)   # default: 4 beats/cycle
-        self._rate_spin.setFixedWidth(44)
+        self._rate_spin.setFixedWidth(56)
         self._rate_spin.setStyleSheet(_spin_style)
 
         self._rate_desc_lbl = QLabel(_RATE_DESC[3])
@@ -553,13 +570,13 @@ class LfoPanel(QFrame):
         self._depth_spin = QSpinBox()
         self._depth_spin.setRange(0, 49)
         self._depth_spin.setValue(25)
-        self._depth_spin.setFixedWidth(52)
+        self._depth_spin.setFixedWidth(66)
         self._depth_spin.setStyleSheet(_spin_style)
 
         self._center_spin = QSpinBox()
         self._center_spin.setRange(0, 99)
         self._center_spin.setValue(50)  # ≈ MIDI 64 (center)
-        self._center_spin.setFixedWidth(52)
+        self._center_spin.setFixedWidth(66)
         self._center_spin.setStyleSheet(_spin_style)
 
         use_cur_btn = QPushButton("Use current")
@@ -650,7 +667,8 @@ class LfoPanel(QFrame):
         box = QComboBox()
         box.addItems(items)
         box.setStyleSheet(
-            f"QComboBox {{ font-size: 11pt; color: {_TEXT}; background-color: {_BG}; }}"
+            f"QComboBox {{ font-size: 13pt; color: {_TEXT}; background-color: {_BG};"
+            f"  border: 1px solid {_DIM}; border-radius: 4px; padding: 2px 4px; }}"
             f"QComboBox QAbstractItemView {{ color: {_TEXT}; background-color: {_BG};"
             f"  selection-background-color: {_ACCENT}; selection-color: #000; }}"
         )
