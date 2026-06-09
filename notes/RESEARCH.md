@@ -95,6 +95,17 @@ PO SYNC take 2:
   +3.118s  Message('sysex', data=(126, 127, 6, 1), time=0)
 ```
 
+1/16 SYNC take 2:
+```
+[startup] 160 total messages — counts by type: {'sysex': 4, 'clock': 156}
+[startup] Clock jitter: mean=31.861ms  stddev=3.130ms  BPM≈78.5
+[startup] Non-clock messages:
+  +0.058s  Message('sysex', data=(126, 2, 6, 2, 0, 32, 118, 2, 1, 2, 0, 0, 0, 0, 0), time=0)
+  +1.055s  Message('sysex', data=(126, 127, 6, 1), time=0)
+  +2.088s  Message('sysex', data=(126, 127, 6, 1), time=0)
+  +3.130s  Message('sysex', data=(126, 127, 6, 1), time=0)
+```
+
 ## SysEx Decoding
 
 **Identity Reply** (arrives ~0–60ms after our probe):
@@ -114,8 +125,8 @@ PO SYNC take 2:
 | FREE | none | Identity Reply + periodic `06 01` (~1 Hz) |
 | MIDI Sync | none | Identity Reply + periodic `06 01` (~1 Hz) — identical to FREE |
 | Beat Match | yes (~24 PPQN) | Identity Reply + periodic `06 01` (~1 Hz) |
-| PO Sync | yes (~24 PPQN, stddev=4.027ms) | Identity Reply + periodic `06 01` (~1 Hz) |
-| 1/16 | yes (~24 PPQN, stddev=3.670ms) | Identity Reply + periodic `06 01` (~1 Hz) |
+| PO Sync | yes (~24 PPQN, stddev 3.652–4.027ms) | Identity Reply + periodic `06 01` (~1 Hz) |
+| 1/16 | yes (~24 PPQN, stddev 3.130–3.670ms) | Identity Reply + periodic `06 01` (~1 Hz) |
 
 ## Final Conclusions
 
@@ -129,13 +140,13 @@ PO SYNC take 2:
 
 **Jitter is not a viable discriminator:**
 
-| Mode | stddev |
-|---|---|
-| Beat Match | 3.652ms |
-| 1/16 | 3.670ms |
-| PO Sync | 4.027ms |
+| Mode | Take 1 stddev | Take 2 stddev | Range |
+|---|---|---|---|
+| Beat Match | 3.652ms | 3.400ms | 0.252ms |
+| PO Sync | 4.027ms | 3.652ms | 0.375ms |
+| 1/16 | 3.670ms | 3.130ms | 0.540ms |
 
-All three are within 0.4ms — no threshold could distinguish them reliably across BPMs, cable quality, or system load.
+All three ranges overlap completely (1/16 take 2 is the lowest reading overall at 3.130ms; PO Sync take 1 is the highest at 4.027ms). Within-mode variance is as large as between-mode variance. No threshold survives this overlap.
 
 **SysEx pattern is identical across all modes** — useful only for confirming the OP-1 is alive, not for identifying sync mode.
 
