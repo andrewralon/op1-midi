@@ -24,20 +24,31 @@ from src.automation import (
 # ---------------------------------------------------------------------------
 # Colors
 # ---------------------------------------------------------------------------
-_BG       = "#111111"
-_PANEL    = "#1e1e1e"
-_ACCENT   = "#4ec94e"
-_MUTE_OFF = "#2a2a2a"
-_TEXT     = "#d8d8d8"
-_DIM      = "#aaaaaa"
-_GREEN    = "#4ec94e"
+_BG         = "#111111"
+_PANEL      = "#1e1e1e"
+_ACCENT     = "#4ec94e"
+_MUTE_OFF   = "#2a2a2a"
+_TEXT       = "#d8d8d8"
+_DIM        = "#aaaaaa"
+_BLUE_1     = "#4477bb"
+_OCHRE_2    = "#bb9933"
+_GRAY_3     = "#848C94"
+_ORANGE_4   = "#ff6a00"
+_STEELBLUE2 = "#132542"
+_OCHRE2     = "#fddf28"
+_OCHRE3     = "#b68e5a"
+_BLUEGRAY2  = "#5c5c74"
+_ORANGE2    = "#ff5349"
+_GRAY       = "#555555"
+_GREEN      = "#4ec94e"
+_RED        = "#e03535"
 
 # OP-1 Field per-track colors, matched from the device's mixer screen
 TRACK_COLORS = {
-    1: "#4477bb",   # steel blue
-    2: "#bb9933",   # ochre / gold
-    3: "#8899aa",   # blue-gray
-    4: "#cc4422",   # brick orange-red
+    1: _BLUE_1,    # steel blue
+    2: _OCHRE_2,   # ochre
+    3: _GRAY_3,    # blue gray
+    4: _ORANGE_4,  # orange
 }
 
 
@@ -51,7 +62,7 @@ class TempoMode(Enum):
 
 _MODE_LABEL: dict[TempoMode, str] = {
     TempoMode.APP_CLOCK: "app (FREE or MIDI SYNC)",
-    TempoMode.OP1_CLOCK: "op1 (BEAT MATCH, PO SYNC, or 1/16 SYNC)",
+    TempoMode.OP1_CLOCK: "op1 (BEAT MATCH or PO SYNC)",
 }
 
 _MANUAL_CYCLE: list[TempoMode] = [
@@ -127,8 +138,8 @@ class PanDial(QDial):
         r = min(cx, cy) - 2.0
 
         # Knob body
-        p.setPen(QPen(QColor("#555555"), 1.0))
-        p.setBrush(QColor(_PANEL))
+        p.setPen(QPen(QColor("#777777"), 1.0))
+        p.setBrush(QColor(_GRAY))
         p.drawEllipse(QPointF(cx, cy), r, r)
 
         # Indicator line: sweep -135° (min) to +135° (max) from 12 o'clock
@@ -138,7 +149,7 @@ class PanDial(QDial):
         sa, ca = math.sin(a), math.cos(a)
 
         color = QColor(_ACCENT) if v == 64 else QColor(_TEXT)
-        pen = QPen(color, 2.0)
+        pen = QPen(color, 3.0 if v == 64 else 2.0)
         pen.setCapStyle(Qt.PenCapStyle.RoundCap)
         p.setPen(pen)
         p.setBrush(Qt.BrushStyle.NoBrush)
@@ -308,8 +319,11 @@ class TrackStrip(QFrame):
             "QSlider::groove:vertical {"
             "  width: 4px; background-color: #333333; border-radius: 2px;"
             "}"
+            "QSlider::sub-page:vertical {"
+            f"  background-color: {_GRAY}; border-radius: 2px; width: 4px;"
+            "}"
             "QSlider::add-page:vertical {"
-            f"  background-color: {_ACCENT}; border-radius: 2px; width: 4px;"
+            f"  background-color: {_RED}; border-radius: 2px; width: 4px;"
             "}"
             "QSlider::handle:vertical {"
             "  background-color: #888888; border: none;"
@@ -809,14 +823,14 @@ class MainWindow(QMainWindow):
             tracks_row.addWidget(strip)
 
         bpm_widget = QWidget()
-        bpm_widget.setFixedWidth(100)
+        bpm_widget.setFixedWidth(130)
         bpm_layout = QVBoxLayout(bpm_widget)
-        bpm_layout.setSpacing(4)
+        bpm_layout.setSpacing(1)
         bpm_layout.setContentsMargins(2, 0, 2, 0)
         bpm_layout.addStretch()
 
         bpm_title = QLabel("BPM")
-        bpm_title.setStyleSheet(f"color: {_DIM}; font-size: 11pt; font-weight: bold;")
+        bpm_title.setStyleSheet(f"color: {_DIM}; font-size: 14pt; font-weight: bold;")
         bpm_title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         bpm_layout.addWidget(bpm_title)
 
@@ -825,7 +839,7 @@ class MainWindow(QMainWindow):
         self._bpm_spin.setDecimals(1)
         self._bpm_spin.setSingleStep(1.0)
         self._bpm_spin.setValue(100.0)
-        self._bpm_spin.setFixedWidth(96)
+        self._bpm_spin.setFixedWidth(66)
         self._bpm_spin.setButtonSymbols(QAbstractSpinBox.ButtonSymbols.NoButtons)
         self._bpm_spin.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self._bpm_spin.setStyleSheet(
@@ -833,9 +847,40 @@ class MainWindow(QMainWindow):
             f"  font-size: 18pt; font-weight: bold; }}"
         )
         self._bpm_spin.valueChanged.connect(clock_gen.set_bpm)
-        # Fix height so it never changes when _set_mode toggles button symbols
         self._bpm_spin.setFixedHeight(self._bpm_spin.sizeHint().height())
-        bpm_layout.addWidget(self._bpm_spin)
+
+        _bpm_btn_ss = (
+            f"QPushButton {{ background-color: {_MUTE_OFF}; color: {_TEXT};"
+            f"  border: none; border-radius: 3px; font-size: 11pt; padding: 0px; }}"
+            f"QPushButton:hover {{ background-color: #3a3a3a; }}"
+            f"QPushButton:disabled {{ color: #3a3a3a; background-color: #1e1e1e; }}"
+        )
+        self._bpm_up_btn = QPushButton("▲")
+        self._bpm_up_btn.setFixedSize(22, 22)
+        self._bpm_up_btn.setStyleSheet(_bpm_btn_ss)
+        self._bpm_up_btn.clicked.connect(lambda: self._bpm_spin.stepBy(1))
+
+        self._bpm_down_btn = QPushButton("▼")
+        self._bpm_down_btn.setFixedSize(22, 22)
+        self._bpm_down_btn.setStyleSheet(_bpm_btn_ss)
+        self._bpm_down_btn.clicked.connect(lambda: self._bpm_spin.stepBy(-1))
+
+        bpm_btn_col = QVBoxLayout()
+        bpm_btn_col.setSpacing(2)
+        bpm_btn_col.setContentsMargins(0, 0, 0, 0)
+        bpm_btn_col.addStretch()
+        bpm_btn_col.addWidget(self._bpm_up_btn)
+        bpm_btn_col.addWidget(self._bpm_down_btn)
+        bpm_btn_col.addStretch()
+
+        bpm_spin_row = QHBoxLayout()
+        bpm_spin_row.setSpacing(4)
+        bpm_spin_row.setContentsMargins(0, 0, 0, 0)
+        bpm_spin_row.addStretch(5)
+        bpm_spin_row.addWidget(self._bpm_spin, alignment=Qt.AlignmentFlag.AlignVCenter)
+        bpm_spin_row.addLayout(bpm_btn_col)
+        bpm_spin_row.addSpacing(2)
+        bpm_layout.addLayout(bpm_spin_row)
 
         bpm_layout.addStretch()
         tracks_row.addWidget(bpm_widget)
@@ -904,17 +949,22 @@ class MainWindow(QMainWindow):
             self._clock_gen.disable_clock()
             self._bpm_spin.setReadOnly(True)
             self._bpm_spin.setStyleSheet(
-                f"QDoubleSpinBox {{ color: {_DIM}; background-color: {_BG};"
-                f"  font-size: 18pt; font-weight: bold; }}"
+                f"QDoubleSpinBox {{ color: {_TEXT}; background-color: {_BG};"
+                f"  font-size: 18pt; font-weight: bold; border: none; }}"
             )
+            self._bpm_up_btn.setEnabled(False)
+            self._bpm_down_btn.setEnabled(False)
         else:
             # App is clock master — enable our clock output, BPM is editable
             self._clock_gen.enable_clock()
             self._bpm_spin.setReadOnly(False)
             self._bpm_spin.setStyleSheet(
                 f"QDoubleSpinBox {{ color: {_TEXT}; background-color: {_BG};"
-                f"  font-size: 18pt; font-weight: bold; }}"
+                f"  font-size: 18pt; font-weight: bold;"
+                f"  border: 1px solid {_DIM}; border-radius: 3px; }}"
             )
+            self._bpm_up_btn.setEnabled(True)
+            self._bpm_down_btn.setEnabled(True)
 
     def _toggle_mode(self) -> None:
         self._startup_detection_done = True  # manual override locks in the choice
