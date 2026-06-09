@@ -469,7 +469,7 @@ class LfoPanel(QFrame):
         )
 
         root = QVBoxLayout(self)
-        root.setSpacing(8)
+        root.setSpacing(12)
         root.setContentsMargins(14, 10, 14, 10)
 
         # ── Row 1: title + Track buttons / Param / Wave ──
