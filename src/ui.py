@@ -504,7 +504,7 @@ class LfoPanel(QFrame):
             self._track_btns[t] = btn
             hdr.addWidget(btn)
             if t < 4:
-                hdr.addSpacing(4)
+                hdr.addSpacing(_LABEL_GAP)
 
         hdr.addStretch(1)
         self._param_combo = self._make_combo(list(PARAMETER_LABELS))
@@ -851,7 +851,7 @@ class LfoPanel(QFrame):
                 lo = max(20,  lfo.center_value - lfo.depth)
                 hi = min(300, lfo.center_value + lfo.depth)
                 self._lfo_list.addItem(QListWidgetItem(
-                    f"Tempo  {lfo.wave.value}  {lo}↔{hi}BPM  {rate_str}"
+                    f"Tempo  {lfo.wave.value}  {lo:.1f}↔{hi:.1f}bpm  {rate_str}"
                 ))
             else:
                 lo = _midi_to_ui(max(0,   lfo.center_value - lfo.depth))
@@ -859,7 +859,7 @@ class LfoPanel(QFrame):
                 inv_str = " [inv]" if lfo.inverted else ""
                 self._lfo_list.addItem(QListWidgetItem(
                     f"T{lfo.track}  {lfo.parameter.value.upper()[:3]}  "
-                    f"{lfo.wave.value}  {lo}↔{hi}  {rate_str}{inv_str}"
+                    f"{lfo.wave.value}  {lo:.1f}↔{hi:.1f}  {rate_str}{inv_str}"
                 ))
 
     def on_beat(self, beat_count: int) -> None:
