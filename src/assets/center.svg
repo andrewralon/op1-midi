@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 22">
+  <!-- Up arrowhead (solid) -->
+  <polygon points="8,1 5,6 11,6" fill="#aaaaaa"/>
+  <!-- Vertical stem (dotted) -->
+  <line x1="8" y1="6" x2="8" y2="16" stroke="#aaaaaa" stroke-width="1.5" stroke-dasharray="2,2"/>
+  <!-- Down arrowhead (solid) -->
+  <polygon points="8,21 5,16 11,16" fill="#aaaaaa"/>
+  <!-- Horizontal crossbar (solid) -->
+  <line x1="2" y1="11" x2="14" y2="11" stroke="#aaaaaa" stroke-width="1.5"/>
+</svg>

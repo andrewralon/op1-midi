@@ -15,7 +15,8 @@ from PyQt6.QtWidgets import (
     QListWidget, QListWidgetItem,
 )
 from PyQt6.QtCore import Qt, QObject, pyqtSignal, QPointF, QSize, QTimer
-from PyQt6.QtGui import QFont, QColor, QPainter, QPen, QPixmap, QIcon
+from PyQt6.QtGui import QFont, QColor, QPainter, QPen, QPixmap, QIcon, QPolygonF
+from PyQt6.QtSvg import QSvgRenderer
 
 from src.controller import Controller, CC_VOLUME, CC_MUTE, CC_PAN
 from src.clock import PPQN
@@ -45,6 +46,7 @@ _OCHRE_2    = "#bb9933" # button 2
 _GRAY_3     = "#848C94" # button 3
 _ORANGE_4   = "#ff6a00" # button 4
 ### MORE COLORS
+_WHITE      = "#ffffff"
 _BLACK      = "#000000"
 _BLUESTEEL  = "#132542"
 _GOLD       = "#fddf28"
@@ -63,11 +65,16 @@ TRACK_COLORS = {
 }
 
 # OTHER - UI ASSETS
-_ARROW_UP_SVG   = os.path.join(os.path.dirname(os.path.abspath(__file__)), "assets", "arrow_up.svg").replace("\\", "/")
-_ARROW_DOWN_SVG = os.path.join(os.path.dirname(os.path.abspath(__file__)), "assets", "arrow_down.svg").replace("\\", "/")
+_ASSETS = os.path.dirname(os.path.abspath(__file__)) + "/assets/"
+_ARROW_UP_SVG   = _ASSETS + "arrow_up.svg"
+_ARROW_DOWN_SVG = _ASSETS + "arrow_down.svg"
+_METRONOME_SVG  = _ASSETS + "metronome.svg"
+_DEPTH_SVG      = _ASSETS + "depth.svg"
+_CENTER_SVG     = _ASSETS + "center.svg"
 
 # OTHER - UI CONSTRAINTS
-_LABEL_GAP = 6  # px between a label and its paired control (dropdown, spinbox, etc.)
+_LABEL_GAP  = 12  # px between a label and its paired control (dropdown, spinbox, etc.)
+_ICON_PT    = 22  # pt size for unicode icon labels
 
 
 # ---------------------------------------------------------------------------
@@ -108,16 +115,20 @@ _RATE_TICKS: dict[int, int] = {
     8: PPQN // 8,   # 8× per beat
 }
 
-_RATE_DESC: dict[int, str] = {
-    1: "1× / 16 beats",
-    2: "1× / 8 beats",
-    3: "1× / 4 beats",
-    4: "1× / 2 beats",
-    5: "1× / beat",
-    6: "2× / beat",
-    7: "4× / beat",
-    8: "8× / beat",
-}
+
+
+def _svg_label(path: str, height: int) -> QLabel:
+    renderer = QSvgRenderer(path)
+    sz = renderer.defaultSize()
+    width = max(1, int(height * sz.width() / max(1, sz.height())))
+    pixmap = QPixmap(width, height)
+    pixmap.fill(Qt.GlobalColor.transparent)
+    p = QPainter(pixmap)
+    renderer.render(p)
+    p.end()
+    lbl = QLabel()
+    lbl.setPixmap(pixmap)
+    return lbl
 
 
 def apply_dark_theme(app: QApplication) -> None:
@@ -161,6 +172,22 @@ class PanDial(QDial):
         p.setPen(QPen(QColor(_KNOB_RIM), 1.0))
         p.setBrush(QColor(_GROOVE))
         p.drawEllipse(QPointF(cx, cy), r, r)
+
+        # Min/max indicator triangles just outside the knob rim, pointing toward center
+        tri_dist = r + 9.0   # base distance from center
+        tri_h = 5.0           # height (base to tip, along radial toward center)
+        tri_hb = 2.0          # half-width of base (perpendicular to radial)
+        p.setPen(Qt.PenStyle.NoPen)
+        p.setBrush(QColor(_DIM))
+        for angle_deg in (-135.0, 135.0):
+            da = math.radians(angle_deg)
+            ds, dc = math.sin(da), math.cos(da)
+            tip = QPointF(cx + ds * (tri_dist - tri_h), cy - dc * (tri_dist - tri_h))
+            bx = cx + ds * tri_dist
+            by = cy - dc * tri_dist
+            bl = QPointF(bx + dc * tri_hb,  by + ds * tri_hb)
+            br = QPointF(bx - dc * tri_hb,  by - ds * tri_hb)
+            p.drawPolygon(QPolygonF([tip, bl, br]))
 
         # Indicator line: sweep -135° (min) to +135° (max) from 12 o'clock
         v = self.value()
@@ -327,17 +354,6 @@ class TrackStrip(QFrame):
         body.setSpacing(8)
         body.setContentsMargins(6, 8, 6, 8)
 
-        # Pan knob with L / R flanking labels
-        _side = f"color: {_DIM}; font-size: 10pt; font-weight: bold;"
-        l_lbl = QLabel("L")
-        l_lbl.setFixedWidth(18)
-        l_lbl.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
-        l_lbl.setStyleSheet(_side)
-        r_lbl = QLabel("R")
-        r_lbl.setFixedWidth(18)
-        r_lbl.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
-        r_lbl.setStyleSheet(_side)
-
         self._pan_dial = PanDial()
         self._pan_dial.setRange(0, 128)
         self._pan_dial.setValue(64)
@@ -348,16 +364,32 @@ class TrackStrip(QFrame):
 
         pan_row = QHBoxLayout()
         pan_row.setContentsMargins(0, 0, 0, 0)
-        pan_row.setSpacing(2)
-        pan_row.addWidget(l_lbl)
         pan_row.addWidget(self._pan_dial, alignment=Qt.AlignmentFlag.AlignCenter)
-        pan_row.addWidget(r_lbl)
         body.addLayout(pan_row)
 
-        # Volume fader (left) + value (right), vertically centered
+        # Volume fader: [digit1] [slider] [digit2] centered in column
         fader_row = QHBoxLayout()
-        fader_row.setSpacing(6)
+        fader_row.setSpacing(0)
         fader_row.setContentsMargins(0, 0, 0, 0)
+
+        _df = QFont("Courier New")
+        _df.setPointSize(40)
+        _df.setWeight(QFont.Weight.Normal)
+        _df.setStretch(100)
+
+        _init = f"{_midi_to_ui(115):02d}"
+
+        self._vol_d1 = QLabel(_init[0])
+        self._vol_d1.setFont(_df)
+        self._vol_d1.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+        self._vol_d1.setStyleSheet(f"color: {_TEXT};")
+        self._vol_d1.setFixedWidth(34)
+
+        self._vol_d2 = QLabel(_init[1])
+        self._vol_d2.setFont(_df)
+        self._vol_d2.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
+        self._vol_d2.setStyleSheet(f"color: {_TEXT};")
+        self._vol_d2.setFixedWidth(34)
 
         self._vol_slider = QSlider(Qt.Orientation.Vertical)
         self._vol_slider.setRange(0, 127)
@@ -366,7 +398,7 @@ class TrackStrip(QFrame):
             QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Expanding
         )
         self._vol_slider.setMinimumHeight(110)
-        self._vol_slider.setFixedWidth(28)
+        self._vol_slider.setFixedWidth(20)
         self._vol_slider.setStyleSheet(
             "QSlider::groove:vertical {"
             f"  width: 4px; background-color: {_GROOVE}; border-radius: 2px;"
@@ -379,18 +411,17 @@ class TrackStrip(QFrame):
             "}"
             "QSlider::handle:vertical {"
             f"  background-color: {_FADER}; border: none;"
-            "  width: 28px; height: 10px;"
-            "  margin: 0 -12px; border-radius: 3px;"
+            "  width: 20px; height: 10px;"
+            "  margin: 0 -8px; border-radius: 3px;"
             "}"
         )
         self._vol_slider.valueChanged.connect(self._on_volume_changed)
-        fader_row.addSpacing(10)
-        fader_row.addWidget(self._vol_slider)
 
-        self._vol_val = QLabel(str(_midi_to_ui(115)))
-        self._vol_val.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self._vol_val.setStyleSheet(f"color: {_TEXT}; font-size: 20pt; font-weight: bold;")
-        fader_row.addWidget(self._vol_val, alignment=Qt.AlignmentFlag.AlignVCenter)
+        fader_row.addStretch()
+        fader_row.addWidget(self._vol_d1, alignment=Qt.AlignmentFlag.AlignVCenter)
+        fader_row.addWidget(self._vol_slider, alignment=Qt.AlignmentFlag.AlignVCenter)
+        fader_row.addWidget(self._vol_d2, alignment=Qt.AlignmentFlag.AlignVCenter)
+        fader_row.addStretch()
 
         body.addLayout(fader_row)
 
@@ -426,7 +457,7 @@ class TrackStrip(QFrame):
             self._ctrl.set_pan(self._track, cc)
 
     def _on_volume_changed(self, value: int) -> None:
-        self._vol_val.setText(str(_midi_to_ui(value)))
+        _s = f"{_midi_to_ui(value):02d}"; self._vol_d1.setText(_s[0]); self._vol_d2.setText(_s[1])
         if self._ready:
             self._ctrl.set_volume(self._track, value)
 
@@ -449,7 +480,7 @@ class TrackStrip(QFrame):
             self._vol_slider.blockSignals(True)
             self._vol_slider.setValue(value)
             self._vol_slider.blockSignals(False)
-            self._vol_val.setText(str(_midi_to_ui(value)))
+            _s = f"{_midi_to_ui(value):02d}"; self._vol_d1.setText(_s[0]); self._vol_d2.setText(_s[1])
         elif param_name == Parameter.PAN.value:
             self._pan_dial.blockSignals(True)
             self._pan_dial.setValue(value)
@@ -469,7 +500,7 @@ class TrackStrip(QFrame):
             self._vol_slider.blockSignals(True)
             self._vol_slider.setValue(value)
             self._vol_slider.blockSignals(False)
-            self._vol_val.setText(str(_midi_to_ui(value)))
+            _s = f"{_midi_to_ui(value):02d}"; self._vol_d1.setText(_s[0]); self._vol_d2.setText(_s[1])
         elif control == CC_PAN:
             self._pan_dial.blockSignals(True)
             self._pan_dial.setValue(value)
@@ -572,19 +603,9 @@ class LfoPanel(QFrame):
         hdr = QHBoxLayout()
         hdr.setSpacing(0)
 
-        title = QLabel("LFO")
-        tf = QFont()
-        tf.setPointSize(14)
-        tf.setBold(True)
-        title.setFont(tf)
-        title.setStyleSheet(f"color: {_DIM};")
-        hdr.addWidget(title)
-
         hdr.addStretch(1)
 
         # Track toggle buttons — create before wiring signals to avoid premature callbacks
-        hdr.addWidget(self._dim_label("Tracks"))
-        hdr.addSpacing(6)
         self._track_btns: dict[int, TrackBtn] = {}
         for t in (1, 2, 3, 4):
             btn = TrackBtn(str(t), t, initial_state=1 if t == 1 else 0)
@@ -598,14 +619,15 @@ class LfoPanel(QFrame):
         self._param_combo = self._make_combo(list(PARAMETER_LABELS))
         self._wave_combo  = self._make_combo(list(LFO_WAVE_LABELS))
 
-        hdr.addWidget(self._dim_label("Param"))
+        hdr.addWidget(self._dim_label("☂", _ICON_PT))
         hdr.addSpacing(_LABEL_GAP)
         hdr.addWidget(self._param_combo)
 
         hdr.addStretch(1)
-        hdr.addWidget(self._dim_label("Wave"))
+        hdr.addWidget(self._dim_label("∿", _ICON_PT))
         hdr.addSpacing(_LABEL_GAP)
         hdr.addWidget(self._wave_combo)
+        hdr.addStretch(1)
 
         root.addLayout(hdr)
 
@@ -642,11 +664,6 @@ class LfoPanel(QFrame):
         self._rate_spin.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self._rate_spin.setStyleSheet(_spin_style)
 
-        self._rate_desc_lbl = QLabel(_RATE_DESC[3])
-        self._rate_desc_lbl.setStyleSheet(f"color: {_DIM}; font-size: 12pt;")
-        self._rate_spin.valueChanged.connect(
-            lambda v: self._rate_desc_lbl.setText(_RATE_DESC[v])
-        )
         self._rate_spin.valueChanged.connect(lambda _: self._update_preview())
 
         self._depth_spin = QSpinBox()
@@ -674,17 +691,15 @@ class LfoPanel(QFrame):
         )
         use_cur_btn.clicked.connect(self._on_use_current)
 
-        params_row.addWidget(self._dim_label("Rate"))
+        params_row.addWidget(self._dim_label("⏱", _ICON_PT))
         params_row.addSpacing(_LABEL_GAP)
         params_row.addWidget(self._rate_spin)
-        params_row.addSpacing(_LABEL_GAP)
-        params_row.addWidget(self._rate_desc_lbl)
         params_row.addStretch(1)
-        params_row.addWidget(self._dim_label("Depth"))
+        params_row.addWidget(_svg_label(_DEPTH_SVG, 22))
         params_row.addSpacing(_LABEL_GAP)
         params_row.addWidget(self._depth_spin)
         params_row.addStretch(1)
-        params_row.addWidget(self._dim_label("Center"))
+        params_row.addWidget(_svg_label(_CENTER_SVG, 22))
         params_row.addSpacing(_LABEL_GAP)
         params_row.addWidget(self._center_spin)
         params_row.addStretch(1)
@@ -767,9 +782,9 @@ class LfoPanel(QFrame):
         )
         return box
 
-    def _dim_label(self, text: str) -> QLabel:
+    def _dim_label(self, text: str, pt: int = 12) -> QLabel:
         lbl = QLabel(text)
-        lbl.setStyleSheet(f"color: {_DIM}; font-size: 12pt; font-weight: bold;")
+        lbl.setStyleSheet(f"color: {_DIM}; font-size: {pt}pt; font-weight: bold;")
         return lbl
 
     def _on_param_changed(self, text: str) -> None:
@@ -1038,10 +1053,9 @@ class MainWindow(QMainWindow):
         bpm_layout.setContentsMargins(2, 0, 2, 0)
         bpm_layout.addStretch()
 
-        bpm_title = QLabel("BPM")
-        bpm_title.setStyleSheet(f"color: {_DIM}; font-size: 14pt; font-weight: bold;")
+        bpm_title = _svg_label(_METRONOME_SVG, 28)
         bpm_title.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        bpm_layout.addWidget(bpm_title)
+        bpm_layout.addWidget(bpm_title, alignment=Qt.AlignmentFlag.AlignCenter)
 
         self._bpm_spin = QDoubleSpinBox()
         self._bpm_spin.setRange(20.0, 300.0)
