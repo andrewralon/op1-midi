@@ -14,8 +14,8 @@ from PyQt6.QtWidgets import (
     QApplication, QComboBox, QSpinBox, QDoubleSpinBox, QAbstractSpinBox,
     QListWidget, QListWidgetItem,
 )
-from PyQt6.QtCore import Qt, QObject, pyqtSignal, QPointF, QSize, QTimer
-from PyQt6.QtGui import QFont, QColor, QPainter, QPen, QPixmap, QIcon, QPolygonF
+from PyQt6.QtCore import Qt, QObject, pyqtSignal, QPointF, QRectF, QSize, QTimer
+from PyQt6.QtGui import QFont, QColor, QPainter, QPen, QPolygonF
 from PyQt6.QtSvg import QSvgRenderer
 
 from src.controller import Controller, CC_VOLUME, CC_MUTE, CC_PAN
@@ -71,6 +71,7 @@ _ARROW_DOWN_SVG = _ASSETS + "arrow_down.svg"
 _METRONOME_SVG  = _ASSETS + "metronome.svg"
 _DEPTH_SVG      = _ASSETS + "depth.svg"
 _CENTER_SVG     = _ASSETS + "center.svg"
+_WAVE_SVG       = _ASSETS + "wave.svg"
 
 # OTHER - UI CONSTRAINTS
 _LABEL_GAP  = 12  # px between a label and its paired control (dropdown, spinbox, etc.)
@@ -117,18 +118,20 @@ _RATE_TICKS: dict[int, int] = {
 
 
 
-def _svg_label(path: str, height: int) -> QLabel:
-    renderer = QSvgRenderer(path)
-    sz = renderer.defaultSize()
-    width = max(1, int(height * sz.width() / max(1, sz.height())))
-    pixmap = QPixmap(width, height)
-    pixmap.fill(Qt.GlobalColor.transparent)
-    p = QPainter(pixmap)
-    renderer.render(p)
-    p.end()
-    lbl = QLabel()
-    lbl.setPixmap(pixmap)
-    return lbl
+class SvgIcon(QWidget):
+    """Renders an SVG file at a fixed logical size. Qt handles Retina scaling automatically."""
+    def __init__(self, path: str, height: int, parent=None):
+        super().__init__(parent)
+        self._renderer = QSvgRenderer(path)
+        sz = self._renderer.defaultSize()
+        width = max(1, int(height * sz.width() / max(1, sz.height())))
+        self.setFixedSize(width, height)
+
+    def paintEvent(self, event) -> None:
+        p = QPainter(self)
+        p.setRenderHint(QPainter.RenderHint.Antialiasing)
+        self._renderer.render(p, QRectF(self.rect()))
+        p.end()
 
 
 def apply_dark_theme(app: QApplication) -> None:
@@ -204,6 +207,83 @@ class PanDial(QDial):
             QPointF(cx + sa * 3.0,       cy - ca * 3.0),
             QPointF(cx + sa * (r - 3.0), cy - ca * (r - 3.0)),
         )
+
+        p.end()
+
+
+# ---------------------------------------------------------------------------
+# 7-segment digit widget
+# ---------------------------------------------------------------------------
+
+class SegmentDigit(QWidget):
+    """Draws a single digit (0–9) as a classic 7-segment LED display."""
+
+    # segments: a=top, b=top-right, c=bot-right, d=bottom, e=bot-left, f=top-left, g=middle
+    _MAP = {
+        '0': (1,1,1,1,1,1,0),
+        '1': (0,1,1,0,0,0,0),
+        '2': (1,1,0,1,1,0,1),
+        '3': (1,1,1,1,0,0,1),
+        '4': (0,1,1,0,0,1,1),
+        '5': (1,0,1,1,0,1,1),
+        '6': (1,0,1,1,1,1,1),
+        '7': (1,1,1,0,0,0,0),
+        '8': (1,1,1,1,1,1,1),
+        '9': (1,1,1,1,0,1,1),
+    }
+
+    def __init__(self, char='0', parent=None):
+        super().__init__(parent)
+        self._char = char
+        self.setFixedSize(22, 46)
+
+    def set_char(self, c: str) -> None:
+        if c != self._char:
+            self._char = c
+            self.update()
+
+    def paintEvent(self, event) -> None:
+        p = QPainter(self)
+        p.setRenderHint(QPainter.RenderHint.Antialiasing)
+        p.setPen(Qt.PenStyle.NoPen)
+
+        w, h = float(self.width()), float(self.height())
+        t   = 3.5   # segment thickness
+        pad = 1.5   # outer padding
+        gap = 1.0   # gap between segment ends
+
+        xl = pad                  # left edge of vertical segs
+        xr = w - pad - t          # right edge of vertical segs
+        yt = pad                  # top of top horiz seg
+        ym = h / 2.0 - t / 2.0   # top of middle horiz seg
+        yb = h - pad - t          # top of bottom horiz seg
+
+        hx0 = xl + t + gap
+        hx1 = xr - gap
+        hw  = hx1 - hx0
+
+        vt0, vt1 = yt + t + gap, ym - gap
+        vb0, vb1 = ym + t + gap, yb - gap
+
+        segs = self._MAP.get(self._char, (0,)*7)
+        on  = QColor(_TEXT)
+        off = QColor("#282828")
+
+        def hseg(y, lit):
+            p.setBrush(on if lit else off)
+            p.drawRect(QPointF(hx0, y).toPoint().x(), int(y), int(hw), int(t))
+
+        def vseg(x, y0, y1, lit):
+            p.setBrush(on if lit else off)
+            p.drawRect(int(x), int(y0), int(t), int(y1 - y0))
+
+        hseg(yt,  segs[0])
+        vseg(xr,  vt0, vt1, segs[1])
+        vseg(xr,  vb0, vb1, segs[2])
+        hseg(yb,  segs[3])
+        vseg(xl,  vb0, vb1, segs[4])
+        vseg(xl,  vt0, vt1, segs[5])
+        hseg(ym,  segs[6])
 
         p.end()
 
@@ -372,24 +452,9 @@ class TrackStrip(QFrame):
         fader_row.setSpacing(0)
         fader_row.setContentsMargins(0, 0, 0, 0)
 
-        _df = QFont("Courier New")
-        _df.setPointSize(40)
-        _df.setWeight(QFont.Weight.Normal)
-        _df.setStretch(100)
-
         _init = f"{_midi_to_ui(115):02d}"
-
-        self._vol_d1 = QLabel(_init[0])
-        self._vol_d1.setFont(_df)
-        self._vol_d1.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
-        self._vol_d1.setStyleSheet(f"color: {_TEXT};")
-        self._vol_d1.setFixedWidth(34)
-
-        self._vol_d2 = QLabel(_init[1])
-        self._vol_d2.setFont(_df)
-        self._vol_d2.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
-        self._vol_d2.setStyleSheet(f"color: {_TEXT};")
-        self._vol_d2.setFixedWidth(34)
+        self._vol_d1 = SegmentDigit(_init[0])
+        self._vol_d2 = SegmentDigit(_init[1])
 
         self._vol_slider = QSlider(Qt.Orientation.Vertical)
         self._vol_slider.setRange(0, 127)
@@ -457,7 +522,7 @@ class TrackStrip(QFrame):
             self._ctrl.set_pan(self._track, cc)
 
     def _on_volume_changed(self, value: int) -> None:
-        _s = f"{_midi_to_ui(value):02d}"; self._vol_d1.setText(_s[0]); self._vol_d2.setText(_s[1])
+        _s = f"{_midi_to_ui(value):02d}"; self._vol_d1.set_char(_s[0]); self._vol_d2.set_char(_s[1])
         if self._ready:
             self._ctrl.set_volume(self._track, value)
 
@@ -480,7 +545,7 @@ class TrackStrip(QFrame):
             self._vol_slider.blockSignals(True)
             self._vol_slider.setValue(value)
             self._vol_slider.blockSignals(False)
-            _s = f"{_midi_to_ui(value):02d}"; self._vol_d1.setText(_s[0]); self._vol_d2.setText(_s[1])
+            _s = f"{_midi_to_ui(value):02d}"; self._vol_d1.set_char(_s[0]); self._vol_d2.set_char(_s[1])
         elif param_name == Parameter.PAN.value:
             self._pan_dial.blockSignals(True)
             self._pan_dial.setValue(value)
@@ -500,7 +565,7 @@ class TrackStrip(QFrame):
             self._vol_slider.blockSignals(True)
             self._vol_slider.setValue(value)
             self._vol_slider.blockSignals(False)
-            _s = f"{_midi_to_ui(value):02d}"; self._vol_d1.setText(_s[0]); self._vol_d2.setText(_s[1])
+            _s = f"{_midi_to_ui(value):02d}"; self._vol_d1.set_char(_s[0]); self._vol_d2.set_char(_s[1])
         elif control == CC_PAN:
             self._pan_dial.blockSignals(True)
             self._pan_dial.setValue(value)
@@ -624,7 +689,7 @@ class LfoPanel(QFrame):
         hdr.addWidget(self._param_combo)
 
         hdr.addStretch(1)
-        hdr.addWidget(self._dim_label("∿", _ICON_PT))
+        hdr.addWidget(SvgIcon(_WAVE_SVG, 22))
         hdr.addSpacing(_LABEL_GAP)
         hdr.addWidget(self._wave_combo)
         hdr.addStretch(1)
@@ -695,11 +760,11 @@ class LfoPanel(QFrame):
         params_row.addSpacing(_LABEL_GAP)
         params_row.addWidget(self._rate_spin)
         params_row.addStretch(1)
-        params_row.addWidget(_svg_label(_DEPTH_SVG, 22))
+        params_row.addWidget(SvgIcon(_DEPTH_SVG, 30))
         params_row.addSpacing(_LABEL_GAP)
         params_row.addWidget(self._depth_spin)
         params_row.addStretch(1)
-        params_row.addWidget(_svg_label(_CENTER_SVG, 22))
+        params_row.addWidget(SvgIcon(_CENTER_SVG, 30))
         params_row.addSpacing(_LABEL_GAP)
         params_row.addWidget(self._center_spin)
         params_row.addStretch(1)
@@ -1053,8 +1118,7 @@ class MainWindow(QMainWindow):
         bpm_layout.setContentsMargins(2, 0, 2, 0)
         bpm_layout.addStretch()
 
-        bpm_title = _svg_label(_METRONOME_SVG, 28)
-        bpm_title.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        bpm_title = SvgIcon(_METRONOME_SVG, 36)
         bpm_layout.addWidget(bpm_title, alignment=Qt.AlignmentFlag.AlignCenter)
 
         self._bpm_spin = QDoubleSpinBox()
