@@ -452,9 +452,24 @@ class TrackStrip(QFrame):
         fader_row.setSpacing(0)
         fader_row.setContentsMargins(0, 0, 0, 0)
 
+        _df = QFont("DIN Alternate")
+        _df.setPointSize(40)
+        _df.setWeight(QFont.Weight.Bold)
+        _df.setStretch(100)
+
         _init = f"{_midi_to_ui(115):02d}"
-        self._vol_d1 = SegmentDigit(_init[0])
-        self._vol_d2 = SegmentDigit(_init[1])
+
+        self._vol_d1 = QLabel(_init[0])
+        self._vol_d1.setFont(_df)
+        self._vol_d1.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+        self._vol_d1.setStyleSheet(f"color: {_TEXT};")
+        self._vol_d1.setFixedWidth(34)
+
+        self._vol_d2 = QLabel(_init[1])
+        self._vol_d2.setFont(_df)
+        self._vol_d2.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
+        self._vol_d2.setStyleSheet(f"color: {_TEXT};")
+        self._vol_d2.setFixedWidth(34)
 
         self._vol_slider = QSlider(Qt.Orientation.Vertical)
         self._vol_slider.setRange(0, 127)
@@ -522,7 +537,7 @@ class TrackStrip(QFrame):
             self._ctrl.set_pan(self._track, cc)
 
     def _on_volume_changed(self, value: int) -> None:
-        _s = f"{_midi_to_ui(value):02d}"; self._vol_d1.set_char(_s[0]); self._vol_d2.set_char(_s[1])
+        _s = f"{_midi_to_ui(value):02d}"; self._vol_d1.setText(_s[0]); self._vol_d2.setText(_s[1])
         if self._ready:
             self._ctrl.set_volume(self._track, value)
 
@@ -545,7 +560,7 @@ class TrackStrip(QFrame):
             self._vol_slider.blockSignals(True)
             self._vol_slider.setValue(value)
             self._vol_slider.blockSignals(False)
-            _s = f"{_midi_to_ui(value):02d}"; self._vol_d1.set_char(_s[0]); self._vol_d2.set_char(_s[1])
+            _s = f"{_midi_to_ui(value):02d}"; self._vol_d1.setText(_s[0]); self._vol_d2.setText(_s[1])
         elif param_name == Parameter.PAN.value:
             self._pan_dial.blockSignals(True)
             self._pan_dial.setValue(value)
@@ -565,7 +580,7 @@ class TrackStrip(QFrame):
             self._vol_slider.blockSignals(True)
             self._vol_slider.setValue(value)
             self._vol_slider.blockSignals(False)
-            _s = f"{_midi_to_ui(value):02d}"; self._vol_d1.set_char(_s[0]); self._vol_d2.set_char(_s[1])
+            _s = f"{_midi_to_ui(value):02d}"; self._vol_d1.setText(_s[0]); self._vol_d2.setText(_s[1])
         elif control == CC_PAN:
             self._pan_dial.blockSignals(True)
             self._pan_dial.setValue(value)
