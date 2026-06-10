@@ -2,11 +2,11 @@
 Sends MIDI CC messages to the OP-1 Field to control volume, pan, and mute.
 
 CC assignments (MIDI spec / OP-1 convention):
-  CC 7  — Channel Volume  (0–127)
+  CC 7  — Channel Volume  (0-127)
   CC 9  — Mute toggle     (≥64 = muted; we use 127=mute, 0=unmute)
-  CC 10 — Pan             (0–127; 64 = center)
+  CC 10 — Pan             (0-127; 64 = center)
 
-Tracks 1–4 map to MIDI channels 1–4 (mido uses 0-indexed channels internally).
+Tracks 1-4 map to MIDI channels 1-4 (mido uses 0-indexed channels internally).
 """
 
 import threading
@@ -40,13 +40,13 @@ class Controller:
     # ------------------------------------------------------------------
 
     def set_volume(self, track: int, value: int) -> None:
-        """Set channel volume. track 1–4, value 0–127."""
+        """Set channel volume. track 1-4, value 0-127."""
         self._validate_track(track)
         self._validate_value(value, "volume")
         self._send_cc(track, CC_VOLUME, value)
 
     def set_pan(self, track: int, value: int) -> None:
-        """Set pan position. track 1–4, value 0–127 (64 = center)."""
+        """Set pan position. track 1-4, value 0-127 (64 = center)."""
         self._validate_track(track)
         self._validate_value(value, "pan")
         self._send_cc(track, CC_PAN, value)
@@ -122,9 +122,9 @@ class Controller:
     @staticmethod
     def _validate_track(track: int) -> None:
         if track not in VALID_TRACKS:
-            raise ValueError(f"track must be 1–4, got {track}")
+            raise ValueError(f"track must be 1-4, got {track}")
 
     @staticmethod
     def _validate_value(value: int, name: str) -> None:
         if not (0 <= value <= 127):
-            raise ValueError(f"{name} value must be 0–127, got {value}")
+            raise ValueError(f"{name} value must be 0-127, got {value}")

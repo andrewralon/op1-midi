@@ -2,8 +2,8 @@
 Beat-synchronized CC automation engine.
 
 Curve math:
-  t = clip position normalized to 0.0–1.0.
-  Each CurveShape maps t → 0–1, which is then lerped between start/end values.
+  t = clip position normalized to 0.0-1.0.
+  Each CurveShape maps t → 0-1, which is then lerped between start/end values.
 
   LINEAR   — constant rate of change
   SINE     — smooth S-curve: slow at both ends, fastest at midpoint
@@ -12,7 +12,7 @@ Curve math:
   HOLD     — stays at start_value, snaps to end_value at the last tick
 
 AutomationEngine.on_tick() is wired as ClockListener's tick_callback, so it
-runs on the clock daemon thread at ~29 Hz (24 PPQN × BPM / 60).  All public
+runs on the clock daemon thread at ~29 Hz (24 PPQN x BPM / 60).  All public
 methods acquire a lock and are safe to call from the Qt main thread.
 """
 
@@ -81,12 +81,12 @@ def _apply_curve(t: float, shape: CurveShape) -> float:
 
 @dataclass
 class Clip:
-    track: int             # 1–4
+    track: int             # 1-4
     parameter: Parameter
     start_beat: int        # absolute beat number (from ClockListener.beat_count)
     duration_beats: int    # length in beats
-    start_value: int       # CC value at t=0  (0–127)
-    end_value: int         # CC value at t=1  (0–127)
+    start_value: int       # CC value at t=0  (0-127)
+    end_value: int         # CC value at t=1  (0-127)
     curve: CurveShape = CurveShape.LINEAR
     loop: bool = False     # if True, restarts after duration_beats
 
@@ -142,18 +142,18 @@ def lfo_wave_value(phase: float, wave: LfoWave) -> float:
 @dataclass
 class LfoClip:
     """Continuously oscillating automation — always loops."""
-    track: int          # 1–4
+    track: int          # 1-4
     parameter: Parameter
     wave: LfoWave
     rate_ticks: int     # ticks per full cycle (PPQN-based)
     depth: int | float          # oscillation half-amplitude (MIDI units or BPM for Tempo)
-    center_value: int | float   # MIDI center (0–127) or BPM for Tempo
+    center_value: int | float   # MIDI center (0-127) or BPM for Tempo
     inverted: bool = False
     _random_prev_phase: float = field(default=-1.0, init=False, repr=False)
     _random_value: float = field(default=0.0, init=False, repr=False)
 
     def value_at(self, phase: float) -> int | float:
-        """phase: 0.0–1.0 position within one cycle."""
+        """phase: 0.0-1.0 position within one cycle."""
         if self.wave is LfoWave.RANDOM:
             p = phase % 1.0
             if self._random_prev_phase < 0.0 or p < self._random_prev_phase:
@@ -343,7 +343,7 @@ class AutomationEngine:
             self._lfo_last_sent[lfo_id] = value
 
         if lfo.parameter is Parameter.TEMPO:
-            log.debug("Tempo LFO → %s (type %s)", value, type(value).__name__)
+            log.debug("tempo lfo → %s (type %s)", value, type(value).__name__)
 
         if lfo.parameter is Parameter.VOLUME:
             self._ctrl.set_volume(lfo.track, value)

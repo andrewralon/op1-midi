@@ -17,13 +17,13 @@ def main() -> None:
 
     in_name = _find_op1(in_names)
     if not in_name:
-        print("OP-1 not found by name. Available ports:")
+        print("op1 not found by name. available ports:")
         for p in in_names:
             print(f"  {p}")
         return
 
-    print(f"Listening on: {in_name}")
-    print("Move controls on the OP-1 — Ctrl-C to stop\n")
+    print(f"listening on: {in_name}")
+    print("move controls on the op1 — ctrl-c to stop\n")
 
     with mido.open_input(in_name) as port:
         for msg in port:

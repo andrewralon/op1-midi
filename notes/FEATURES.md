@@ -3,8 +3,8 @@
 ## To do
 - [ ] Ease In curve: add `ease in` LFO waveform — the complement of `log`; each half-cycle lingers at the extreme then accelerates through the transition (slow start, sharp arrival). Completes the ease-in / ease-out pair.
 - [ ] Sweep curves: add `sweep up` and `sweep down` LFO waveforms — a chirp/frequency-sweep shape where the oscillation rate accelerates (or decelerates) across the cycle. Naturally one-shot; a sweep-up starts at the minimum rate and reaches the maximum rate by the end of one cycle.
-- [ ] One-shot LFOs: add a `loop` flag to `LfoClip` (default true). When false, the engine auto-removes the LFO after one full cycle. UI needs a "Start once" trigger or a 1× toggle alongside Start. Sweep curves should default to one-shot. The active LFOs list would show them disappearing automatically on completion.
-- [ ] Master LFO support (tempo, volume, compression, etc.): add an **M** track button (same 3-state style as the 1–4 buttons, colored `_ACCENT` / green) for targeting master/global parameters. Selecting M with a master-capable param (e.g. Tempo) routes the LFO to that master target; clicking M a second time inverts the curve, just like the per-track invert already works. Generalizes to future master params (master volume, master compression) without further UI changes.
+- [ ] One-shot LFOs: add a `loop` flag to `LfoClip` (default true). When false, the engine auto-removes the LFO after one full cycle. UI needs a "start once" or "1-shot" trigger or a 1x toggle alongside Start. Sweep curves should default to one-shot. The active LFOs list would show them disappearing automatically on completion.
+- [ ] Master LFO support (tempo, volume, compression, etc.): add an **M** track button (same 3-state style as the 1-4 buttons, colored `_ACCENT` / green) for targeting master/global parameters. Selecting M with a master-capable param (e.g. Tempo) routes the LFO to that master target; clicking M a second time inverts the curve, just like the per-track invert already works. Generalizes to future master params (master volume, master compression) without further UI changes.
 - [ ] Automation / fader conflict: manually moving a fader while automation is running should cancel that automation clip
 - [ ] Preset saving: save/load slider positions and automation clips as JSON
 - [ ] Per-track FX + LFO params: add OP-1 MIDI CC params for per-track FX controls and per-track LFO settings (see OP-1 MIDI spec)
@@ -19,7 +19,7 @@
 - [x] Project scaffold (venv, requirements.txt, .gitignore, src/ layout)
 - [x] MIDI device detection and connection (auto-detect OP-1 by port name)
 - [x] Clock listener: 24 PPQN tick counting, smoothed BPM calculation, beat callback
-- [x] Controller: CC 7 (volume), CC 9 (mute), CC 10 (pan) on channels 1–4
+- [x] Controller: CC 7 (volume), CC 9 (mute), CC 10 (pan) on channels 1-4
 - [x] CLI test script (test_cli.py): live BPM, mute toggle every 4 beats
 - [x] PyQt6 desktop UI: dark theme, 4 track strips
 - [x] Curve automation engine: Linear, Sine, Ease In/Out, Hold — beat-synchronized, loopable
@@ -31,7 +31,7 @@
 - [x] Transport buttons: Play (MIDI Start / Continue), Stop (MIDI Stop) — left column beside tracks
 - [x] Tape scrub buttons: ← / → send CC 82 (prev bar) and CC 83 (next bar) with Song Position Pointer for accurate resume position
 - [x] MIDI clock generator: app acts as MIDI master, sends 24 PPQN clock continuously; OP-1 set to MIDI Sync mode locks to app tempo
-- [x] BPM spinbox: set tempo 20–300 BPM with one decimal place; arrow keys update live, Enter commits typed value
+- [x] BPM spinbox: set tempo 20-300 BPM with one decimal place; arrow keys update live, Enter commits typed value
 - [x] Octave shift: CC 79 (< 64 = down, ≥ 64 = up) — note: only active on OP-1 in keyboard/synth mode, not tape mode
 - [x] LFO panel: waveform preview, rate/depth/center controls, range readout on same row, Start/Stop Selected/Stop All
 - [x] Tempo LFO: BPM exposed as LFO target; LFOs modulate app clock tempo with float precision; BPM restores to original value when Tempo LFO is stopped

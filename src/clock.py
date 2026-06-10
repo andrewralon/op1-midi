@@ -3,7 +3,7 @@ Listens for MIDI clock ticks from the OP-1 Field and calculates live BPM.
 
 MIDI clock standard: 24 Pulse-Per-Quarter-Note (PPQN).
   - One beat = 24 clock ticks.
-  - BPM = 60 / (seconds per beat) = 60 / (24 × average_tick_interval_seconds).
+  - BPM = 60 / (seconds per beat) = 60 / (24 x average_tick_interval_seconds).
 
 Threading model:
   - A dedicated daemon thread reads the input port in a tight loop.

@@ -32,7 +32,7 @@ def load_palette(path: str = "src/ui.py") -> list[tuple[str, str]]:
 def main() -> None:
     palette = load_palette()
     if not palette:
-        print("No colors found — is src/ui.py in the current directory?")
+        print("no colors found — is src/ui.py in the current directory?")
         sys.exit(1)
 
     app = QApplication(sys.argv)

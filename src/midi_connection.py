@@ -27,16 +27,16 @@ def _find_op1(names: list[str]) -> str | None:
 
 
 def _prompt_user(names: list[str], direction: str) -> str:
-    print(f"\nAvailable MIDI {direction} ports:")
+    print(f"available MIDI {direction} ports:")
     for i, name in enumerate(names):
         print(f"  [{i + 1}] {name}")
     while True:
-        raw = input(f"Select {direction} port number (or q to quit): ").strip()
+        raw = input(f"select {direction} port number (or q to quit): ").strip()
         if raw.lower() in ("q", "quit"):
             sys.exit(0)
         if raw.isdigit() and 1 <= int(raw) <= len(names):
             return names[int(raw) - 1]
-        print("Invalid selection, try again.")
+        print("invalid selection, try again.")
 
 
 def connect() -> tuple[mido.ports.BaseInput, mido.ports.BaseOutput]:
@@ -48,23 +48,23 @@ def connect() -> tuple[mido.ports.BaseInput, mido.ports.BaseOutput]:
     """
     in_names, out_names = list_ports()
 
-    print("Available MIDI input ports:")
+    print("available MIDI input ports:")
     for name in in_names:
         print(f"  • {name}")
-    print("Available MIDI output ports:")
+    print("available MIDI output ports:")
     for name in out_names:
         print(f"  • {name}")
 
     in_name = _find_op1(in_names)
     if in_name:
-        print(f"\nAuto-detected OP-1 input:  {in_name}")
+        print(f"auto-detected op1 input:  {in_name}")
     else:
-        print("\nOP-1 not found by name — manual selection required.")
+        print("op1 not found by name — manual selection required.")
         in_name = _prompt_user(in_names, "input")
 
     out_name = _find_op1(out_names)
     if out_name:
-        print(f"Auto-detected OP-1 output: {out_name}")
+        print(f"auto-detected op1 output: {out_name}")
     else:
         out_name = _prompt_user(out_names, "output")
 

@@ -112,8 +112,8 @@ _RATE_TICKS: dict[int, int] = {
     4: 2  * PPQN,   # once per 2 beats
     5: PPQN,        # once per beat
     6: PPQN // 2,   # twice per beat
-    7: PPQN // 4,   # 4× per beat
-    8: PPQN // 8,   # 8× per beat
+    7: PPQN // 4,   # 4x per beat
+    8: PPQN // 8,   # 8x per beat
 }
 
 
@@ -243,7 +243,7 @@ class PanDial(QDial):
 # ---------------------------------------------------------------------------
 
 class SegmentDigit(QWidget):
-    """Draws a single digit (0–9) as a classic 7-segment LED display."""
+    """Draws a single digit (0-9) as a classic 7-segment LED display."""
 
     # segments: a=top, b=top-right, c=bot-right, d=bottom, e=bot-left, f=top-left, g=middle
     _MAP = {
@@ -877,7 +877,7 @@ class LfoPanel(QFrame):
         self._center_spin.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self._center_spin.setStyleSheet(_double_spin_style)
 
-        use_cur_btn = QPushButton("Current")
+        use_cur_btn = QPushButton("current")
         use_cur_btn.setStyleSheet(
             f"QPushButton {{ background-color: {_HOVER}; color: {_TEXT};"
             f"  border: none; border-radius: 4px; font-size: 12pt;"
@@ -1163,12 +1163,12 @@ class LfoPanel(QFrame):
             if lfo.rate_ticks >= PPQN:
                 rate_str = f"{lfo.rate_ticks // PPQN}b/cycle"
             else:
-                rate_str = f"{PPQN // lfo.rate_ticks}×/beat"
+                rate_str = f"{PPQN // lfo.rate_ticks}x/beat"
             if lfo.parameter is Parameter.TEMPO:
                 lo = max(20,  lfo.center_value - lfo.depth)
                 hi = min(300, lfo.center_value + lfo.depth)
                 self._lfo_list.addItem(QListWidgetItem(
-                    f"Tempo  {lfo.wave.value}  {lo:.1f}↔{hi:.1f}bpm  {rate_str}"
+                    f"tempo  {lfo.wave.value}  {lo:.1f}↔{hi:.1f}bpm  {rate_str}"
                 ))
             else:
                 lo = _midi_to_ui(max(0,   lfo.center_value - lfo.depth))
@@ -1216,7 +1216,7 @@ class MainWindow(QMainWindow):
         bridge.reconnected.connect(self._on_reconnected)
 
     def _setup_ui(self, controller: Controller, engine: AutomationEngine, port_name: str, clock_gen) -> None:
-        self.setWindowTitle("OP-1 LFO Hero")
+        self.setWindowTitle("op1 lfo hero")
         self.setMinimumSize(700, 600)
         self.setStyleSheet(f"QMainWindow {{ background-color: {_BG}; }}")
 
@@ -1361,14 +1361,14 @@ class MainWindow(QMainWindow):
         status_row = QHBoxLayout()
         status_row.setContentsMargins(2, 4, 2, 0)
 
-        self._conn_label = QLabel(f"● Connected: {port_name}")
+        self._conn_label = QLabel(f"● connected: {port_name}")
         self._conn_label.setStyleSheet(f"color: {_GREEN}; font-size: 11pt; font-weight: bold;")
         self._conn_port_name = port_name
         status_row.addWidget(self._conn_label)
 
         status_row.addStretch()
 
-        mode_lbl = QLabel("Tempo Mode:")
+        mode_lbl = QLabel("tempo mode:")
         mode_lbl.setStyleSheet(f"color: {_DIM}; font-size: 11pt; font-weight: bold;")
 
         self._mode_btn = QPushButton(_MODE_LABEL[TempoMode.APP_CLOCK])
@@ -1515,11 +1515,11 @@ class MainWindow(QMainWindow):
             self._clock_gen.goto_start()
 
     def _on_disconnected(self) -> None:
-        self._conn_label.setText(f"● Disconnected: {self._conn_port_name} — Reconnecting...")
+        self._conn_label.setText(f"● disconnected: {self._conn_port_name} — Reconnecting...")
         self._conn_label.setStyleSheet(f"color: {_RED}; font-size: 11pt; font-weight: bold;")
 
     def _on_reconnected(self) -> None:
-        self._conn_label.setText(f"● Connected: {self._conn_port_name}")
+        self._conn_label.setText(f"● connected: {self._conn_port_name}")
         self._conn_label.setStyleSheet(f"color: {_GREEN}; font-size: 11pt; font-weight: bold;")
 
     def _on_beat(self, beat_num: int) -> None:

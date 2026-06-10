@@ -108,7 +108,7 @@ PO SYNC take 2:
 
 ## SysEx Decoding
 
-**Identity Reply** (arrives ~0–60ms after our probe):
+**Identity Reply** (arrives ~0-60ms after our probe):
 `F0 7E 02 06 02 00 20 76 02 01 02 00 00 00 00 F7`
 - `7E 02 06 02` — Universal Non-Real Time, device ID 2, Identity Reply
 - `00 20 76` — Teenage Engineering manufacturer ID
@@ -125,8 +125,8 @@ PO SYNC take 2:
 | FREE | none | Identity Reply + periodic `06 01` (~1 Hz) |
 | MIDI Sync | none | Identity Reply + periodic `06 01` (~1 Hz) — identical to FREE |
 | Beat Match | yes (~24 PPQN) | Identity Reply + periodic `06 01` (~1 Hz) |
-| PO Sync | yes (~24 PPQN, stddev 3.652–4.027ms) | Identity Reply + periodic `06 01` (~1 Hz) |
-| 1/16 | yes (~24 PPQN, stddev 3.130–3.670ms) | Identity Reply + periodic `06 01` (~1 Hz) |
+| PO Sync | yes (~24 PPQN, stddev 3.652-4.027ms) | Identity Reply + periodic `06 01` (~1 Hz) |
+| 1/16 | yes (~24 PPQN, stddev 3.130-3.670ms) | Identity Reply + periodic `06 01` (~1 Hz) |
 
 ## Final Conclusions
 

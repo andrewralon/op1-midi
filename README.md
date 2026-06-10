@@ -50,7 +50,7 @@ The status bar at the bottom of the window shows the connected port name once MI
 - The app generates a continuous **24 PPQN MIDI clock** signal — the OP-1 locks to this tempo in MIDI Sync mode
 - **Arrow keys** — increment/decrement by 1.0 BPM
 - **Type a value** and press **Enter** to set an exact tempo
-- Range: 20.0 – 300.0 BPM
+- Range: 20.0 - 300.0 BPM
 
 Changes take effect immediately; the OP-1's BPM display updates in real time.
 
@@ -58,7 +58,7 @@ Changes take effect immediately; the OP-1's BPM display updates in real time.
 
 ### Track Strips
 
-Each of the four tracks corresponds to an OP-1 Field mixer channel (tracks 1–4 = MIDI channels 1–4).
+Each of the four tracks corresponds to an OP-1 Field mixer channel (tracks 1-4 = MIDI channels 1-4).
 
 #### Mute button (top)
 - Colored header button showing the track number
@@ -73,7 +73,7 @@ Each of the four tracks corresponds to an OP-1 Field mixer channel (tracks 1–4
 - Labels: **L** (left) and **R** (right)
 
 #### Volume fader
-- Vertical slider, range 0–99 (maps to MIDI 0–127)
+- Vertical slider, range 0-99 (maps to MIDI 0-127)
 - Default: **90** (MIDI 115)
 - The filled portion below the handle turns red to show the current level
 - The numeric value is shown below the fader
@@ -98,11 +98,11 @@ A live preview of the selected waveform shape is drawn in the panel. The number 
 | **Rate** | How many LFO cycles per bar (beat-synced) |
 | **Depth** | How much the parameter value swings from center |
 | **Center** | The midpoint value the LFO oscillates around |
-| **Range** | Readout showing the min–max value the LFO will reach, derived from Center ± Depth |
+| **Range** | Readout showing the min-max value the LFO will reach, derived from Center ± Depth |
 
 #### Inverted LFOs
 
-When two or more tracks are selected, the **Invert 2nd+** checkbox becomes available. With it checked, the first selected track gets the normal waveform and every additional track gets the same waveform flipped upside-down — its output is `center - (wave × depth)` instead of `center + (wave × depth)`.
+When two or more tracks are selected, the **Invert 2nd+** checkbox becomes available. With it checked, the first selected track gets the normal waveform and every additional track gets the same waveform flipped upside-down — its output is `center - (wave x depth)` instead of `center + (wave x depth)`.
 
 This means when the primary track's value rises, the secondary tracks' values fall by the same amount, and vice versa. Some uses:
 
@@ -198,10 +198,10 @@ This installs:
 
 | CC | Function | Range | Notes |
 |----|----------|-------|-------|
-| 7  | Volume   | 0–127 | Per channel (track 1–4 = channel 1–4) |
-| 9  | Mute     | 0–127 | ≥ 64 = muted |
-| 10 | Pan      | 0–127 | 64 = center |
-| 79 | Octave   | 0–127 | < 64 = down, ≥ 64 = up (keyboard/synth mode only) |
+| 7  | Volume   | 0-127 | Per channel (track 1-4 = channel 1-4) |
+| 9  | Mute     | 0-127 | ≥ 64 = muted |
+| 10 | Pan      | 0-127 | 64 = center |
+| 79 | Octave   | 0-127 | < 64 = down, ≥ 64 = up (keyboard/synth mode only) |
 | 82 | Tape prev bar | 127 | Tape navigation |
 | 83 | Tape next bar | 127 | Tape navigation |
 

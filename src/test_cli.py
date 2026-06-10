@@ -46,8 +46,8 @@ def main() -> None:
 
     clock = ClockListener(in_port, beat_callback=on_beat)
     clock.start()
-    print("Clock listener started. Waiting for MIDI clock from the OP-1...")
-    print("(Make sure the OP-1 is playing or has MIDI sync output enabled.)\n")
+    print("clock listener started. Waiting for MIDI clock from the op1...")
+    print("(make sure the op1 is playing or has MIDI sync output enabled.)\n")
 
     # --- Main loop ---
     last_bpm_print = time.monotonic()
@@ -86,7 +86,7 @@ def main() -> None:
         clock.stop()
         in_port.close()
         out_port.close()
-        print("Ports closed. Goodbye.")
+        print("ports closed. goodbye.")
 
 
 if __name__ == "__main__":
