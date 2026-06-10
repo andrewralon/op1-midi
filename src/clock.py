@@ -275,12 +275,16 @@ class MidiClockGenerator:
         self._port.send(mido.Message("control_change", channel=0, control=82, value=127))
         self._spp_pos = max(0, self._spp_pos - 16)
         self._port.send(mido.Message("songpos", pos=self._spp_pos))
+        if self._playing:
+            self._port.send(mido.Message("continue"))
 
     def tape_next_bar(self) -> None:
         """CC 83 + SPP: jump tape and sequencer position forward one bar."""
         self._port.send(mido.Message("control_change", channel=0, control=83, value=127))
         self._spp_pos += 16
         self._port.send(mido.Message("songpos", pos=self._spp_pos))
+        if self._playing:
+            self._port.send(mido.Message("continue"))
 
     def shutdown(self) -> None:
         self._running = False

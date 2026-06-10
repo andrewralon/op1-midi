@@ -139,7 +139,7 @@ def apply_dark_theme(app: QApplication) -> None:
 
 class ClockBridge(QObject):
     beat              = pyqtSignal(int)
-    automation_update = pyqtSignal(int, str, int)
+    automation_update = pyqtSignal(int, str, float)
     cc_received       = pyqtSignal(int, int, int)
 
 
@@ -890,6 +890,7 @@ class MainWindow(QMainWindow):
         self._clock             = clock
         self._clock_gen         = clock_gen
         self._transport_playing = False
+        self._transport_stopped = False
         self._strips: dict[int, TrackStrip] = {}
         self._setup_ui(controller, engine, port_name, clock_gen)
 
@@ -927,8 +928,7 @@ class MainWindow(QMainWindow):
         oct_left_btn = _make_btn("←")
         oct_right_btn = _make_btn("→")
 
-        play_btn.clicked.connect(clock_gen.play)
-        stop_btn.clicked.connect(clock_gen.stop)
+        play_btn.clicked.connect(self._on_transport_play)
         stop_btn.clicked.connect(self._on_transport_stop)
         oct_left_btn.clicked.connect(clock_gen.tape_prev_bar)
         oct_right_btn.clicked.connect(clock_gen.tape_next_bar)
