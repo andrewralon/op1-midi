@@ -76,12 +76,12 @@ _LABEL_GAP = 6  # px between a label and its paired control (dropdown, spinbox, 
 # ---------------------------------------------------------------------------
 
 class TempoMode(Enum):
-    APP_CLOCK = auto()  # auto-detected: OP-1 silent (FREE or MIDI SYNC)
+    APP_CLOCK = auto()  # auto-detected: OP-1 silent (MIDI SYNC or FREE)
     OP1_CLOCK = auto()  # auto-detected: OP-1 sending clock (BEAT MATCH, PO SYNC, or 1/16)
 
 _MODE_LABEL: dict[TempoMode, str] = {
-    TempoMode.APP_CLOCK: "app (FREE or MIDI SYNC)",
-    TempoMode.OP1_CLOCK: "op1 (BEAT MATCH or PO SYNC)",
+    TempoMode.APP_CLOCK: "app (MIDI SYNC)",
+    TempoMode.OP1_CLOCK: "op1 (BEAT MATCH)",
 }
 
 _MANUAL_CYCLE: list[TempoMode] = [
