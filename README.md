@@ -25,6 +25,15 @@ python -m src.app
 
 The app auto-detects the OP-1 by port name (looks for "op-1" case-insensitively). If detection fails, a dialog will appear — check that the USB-C cable is connected and the OP-1 is powered on.
 
+### Command-line flags
+
+| Flag | Description |
+|------|-------------|
+| `--debug` | Enable verbose debug logging to the terminal |
+| `--no-device` | Run without a MIDI device — all controls are live but no MIDI is sent |
+
+No-device mode also activates automatically if no MIDI input or output ports are found at startup, or if `no device` is selected during manual port selection. The status bar will show **● no device**.
+
 The status bar at the bottom of the window shows the connected port name once MIDI is established.
 
 ---

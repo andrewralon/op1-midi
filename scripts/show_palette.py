@@ -1,8 +1,9 @@
 """
 Show the current color palette defined in src/ui.py.
 
-Usage:
-    python show_palette.py
+Usage (run from project root with venv active):
+    source .venv/bin/activate
+    python scripts/show_palette.py
 """
 
 import sys

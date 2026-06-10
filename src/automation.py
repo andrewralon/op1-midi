@@ -102,6 +102,7 @@ class LfoWave(Enum):
     SAW_DOWN = "saw down"
     SQUARE   = "square"
     LOG      = "log"
+    EASE_IN  = "ease in"
     RANDOM   = "random"
 
 
@@ -131,6 +132,13 @@ def lfo_wave_value(phase: float, wave: LfoWave) -> float:
             return 2.0 * math.log1p(t * 9.0) / math.log(10.0) - 1.0
         t = (phase - 0.5) * 2.0
         return 1.0 - 2.0 * math.log1p(t * 9.0) / math.log(10.0)
+    if wave is LfoWave.EASE_IN:
+        # Complement of log: slow start, fast arrival (exponential); inverse of log1p mapping
+        if phase < 0.5:
+            t = phase * 2.0
+            return 2.0 * (10.0 ** t - 1.0) / 9.0 - 1.0
+        t = (phase - 0.5) * 2.0
+        return 1.0 - 2.0 * (10.0 ** t - 1.0) / 9.0
     if wave is LfoWave.RANDOM:
         # 8 steps per cycle; Knuth multiplicative hash for uniform distribution
         step = int(phase * 8) % 8

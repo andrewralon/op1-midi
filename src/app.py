@@ -3,7 +3,7 @@ Entry point for the OP-1 MIDI Controller desktop app.
 
 Run with:
     python -m src.app
-    python -m src.app -debug
+    python -m src.app --debug
 """
 
 import logging
@@ -21,8 +21,20 @@ from src.automation import AutomationEngine, Parameter
 from src.ui import MainWindow, ClockBridge, apply_dark_theme
 
 
+class _NullPort:
+    """No-op MIDI port used when running with no device."""
+    name = "no device"
+    def send(self, msg): pass
+    def iter_pending(self): return iter([])
+    def close(self): pass
+
+
 def main() -> None:
-    level = logging.DEBUG if "-debug" in sys.argv else logging.WARNING
+    args = sys.argv[1:]
+    debug_mode = "--debug" in args
+    no_device  = "--no-device" in args
+
+    level = logging.DEBUG if debug_mode else logging.WARNING
     logging.basicConfig(level=level, format="%(message)s")
 
     app = QApplication(sys.argv)
@@ -36,16 +48,31 @@ def main() -> None:
     sigint_timer.start(200)
     sigint_timer.timeout.connect(lambda: None)
 
-    try:
-        in_port, out_port = connect()
-    except KeyboardInterrupt:
-        sys.exit(0)
-    except Exception as exc:
-        QMessageBox.critical(None, "MIDI Connection Failed", str(exc))
-        sys.exit(1)
+    # Auto-enable no-device mode when no MIDI ports are available at all.
+    if not no_device:
+        try:
+            if not mido.get_input_names() or not mido.get_output_names():
+                no_device = True
+        except Exception:
+            no_device = True
 
-    in_port_name  = in_port.name
-    out_port_name = out_port.name
+    if no_device:
+        in_port       = _NullPort()
+        out_port      = _NullPort()
+        in_port_name  = _NullPort.name
+        out_port_name = _NullPort.name
+    else:
+        try:
+            raw_in, raw_out = connect()
+            in_port       = raw_in  if raw_in  is not None else _NullPort()
+            out_port      = raw_out if raw_out is not None else _NullPort()
+            in_port_name  = in_port.name
+            out_port_name = out_port.name
+        except KeyboardInterrupt:
+            sys.exit(0)
+        except Exception as exc:
+            QMessageBox.critical(None, "MIDI Connection Failed", str(exc))
+            sys.exit(1)
 
     controller = Controller(out_port)
     bridge = ClockBridge()
@@ -85,13 +112,24 @@ def main() -> None:
     )
     clock.start()
 
-    # Probe: Universal SysEx Identity Request (F0 7E 7F 06 01 F7)
-    # Any response will be captured in the startup log for mode detection research.
-    out_port.send(mido.Message("sysex", data=[0x7E, 0x7F, 0x06, 0x01]))
+    no_dev = _NullPort.name
+    both_no_device = (in_port_name == no_dev and out_port_name == no_dev)
 
-    window = MainWindow(controller, clock, engine, bridge, in_port_name, clock_gen)
+    if not both_no_device:
+        # Probe: Universal SysEx Identity Request (F0 7E 7F 06 01 F7)
+        # Any response will be captured in the startup log for mode detection research.
+        out_port.send(mido.Message("sysex", data=[0x7E, 0x7F, 0x06, 0x01]))
+
+    window = MainWindow(controller, clock, engine, bridge, in_port_name, clock_gen, out_port_name=out_port_name)
     window.move(0, 0)
     window.show()
+
+    if both_no_device:
+        def on_quit() -> None:
+            clock_gen.shutdown()
+            clock.stop()
+        app.aboutToQuit.connect(on_quit)
+        sys.exit(app.exec())
 
     # ── Connection polling ──────────────────────────────────────────────────
     # Poll every 500ms. On disconnect: stop threads immediately before they
@@ -110,7 +148,9 @@ def main() -> None:
             # (device being removed). Treat as disconnected and retry next tick.
             in_names  = []
             out_names = []
-        port_present = in_port_name in in_names and out_port_name in out_names
+        no_dev = _NullPort.name
+        port_present = (in_port_name  == no_dev or in_port_name  in in_names) and \
+                       (out_port_name == no_dev or out_port_name in out_names)
 
         if _connected and not port_present:
             _connected = False

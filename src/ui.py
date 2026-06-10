@@ -1197,8 +1197,9 @@ class MainWindow(QMainWindow):
         clock,
         engine: AutomationEngine,
         bridge: ClockBridge,
-        port_name: str,
+        in_port_name: str,
         clock_gen,
+        out_port_name: str = "",
     ) -> None:
         super().__init__()
         self._controller        = controller
@@ -1207,7 +1208,7 @@ class MainWindow(QMainWindow):
         self._transport_playing = False
         self._transport_stopped = False
         self._strips: dict[int, TrackStrip] = {}
-        self._setup_ui(controller, engine, port_name, clock_gen)
+        self._setup_ui(controller, engine, in_port_name, out_port_name, clock_gen)
 
         bridge.beat.connect(self._on_beat)
         bridge.automation_update.connect(self._on_automation_update)
@@ -1215,7 +1216,25 @@ class MainWindow(QMainWindow):
         bridge.disconnected.connect(self._on_disconnected)
         bridge.reconnected.connect(self._on_reconnected)
 
-    def _setup_ui(self, controller: Controller, engine: AutomationEngine, port_name: str, clock_gen) -> None:
+    _NO_DEVICE = "no device"
+
+    @staticmethod
+    def _conn_text(in_name: str, out_name: str) -> str:
+        nd = MainWindow._NO_DEVICE
+        if in_name == nd and out_name == nd:
+            return "● connected: no device"
+        if in_name == out_name:
+            return f"● connected: {in_name}"
+        return f"● connected: [in]{in_name}, [out]{out_name}"
+
+    @staticmethod
+    def _conn_color(in_name: str, out_name: str) -> str:
+        nd = MainWindow._NO_DEVICE
+        if in_name == nd or out_name == nd:
+            return _GOLD
+        return _GREEN
+
+    def _setup_ui(self, controller: Controller, engine: AutomationEngine, in_port_name: str, out_port_name: str, clock_gen) -> None:
         self.setWindowTitle("op1 lfo hero")
         self.setMinimumSize(700, 600)
         self.setStyleSheet(f"QMainWindow {{ background-color: {_BG}; }}")
@@ -1361,9 +1380,11 @@ class MainWindow(QMainWindow):
         status_row = QHBoxLayout()
         status_row.setContentsMargins(2, 4, 2, 0)
 
-        self._conn_label = QLabel(f"● connected: {port_name}")
-        self._conn_label.setStyleSheet(f"color: {_GREEN}; font-size: 11pt; font-weight: bold;")
-        self._conn_port_name = port_name
+        self._conn_label = QLabel(self._conn_text(in_port_name, out_port_name))
+        color = self._conn_color(in_port_name, out_port_name)
+        self._conn_label.setStyleSheet(f"color: {color}; font-size: 11pt; font-weight: bold;")
+        self._conn_in_port_name  = in_port_name
+        self._conn_out_port_name = out_port_name
         status_row.addWidget(self._conn_label)
 
         status_row.addStretch()
@@ -1375,7 +1396,7 @@ class MainWindow(QMainWindow):
         self._mode_btn.setStyleSheet(
             f"QPushButton {{ color: {_DIM}; background-color: transparent;"
             f"  border: 1px solid {_GROOVE}; border-radius: 4px;"
-            f"  font-size: 11pt; font-weight: bold; padding: 2px 8px; }}"
+            f"  font-size: 11pt; font-weight: bold; padding: 2px 4px; }}"
             f"QPushButton:hover {{ border-color: {_GRAY}; }}"
         )
         self._mode_btn.clicked.connect(self._toggle_mode)
@@ -1408,7 +1429,7 @@ class MainWindow(QMainWindow):
         self._mode_btn.setStyleSheet(
             f"QPushButton {{ color: {_GREEN}; background-color: transparent;"
             f"  border: 1px solid {_GREEN}; border-radius: 4px;"
-            f"  font-size: 11pt; font-weight: bold; padding: 2px 8px; }}"
+            f"  font-size: 11pt; font-weight: bold; padding: 2px 4px; }}"
             f"QPushButton:hover {{ background-color: #0f2a0f; }}"
         )
         if mode == TempoMode.OP1_CLOCK:
@@ -1515,12 +1536,14 @@ class MainWindow(QMainWindow):
             self._clock_gen.goto_start()
 
     def _on_disconnected(self) -> None:
-        self._conn_label.setText(f"● disconnected: {self._conn_port_name} — Reconnecting...")
+        base = self._conn_text(self._conn_in_port_name, self._conn_out_port_name)
+        self._conn_label.setText(base.replace("● connected", "● disconnected"))
         self._conn_label.setStyleSheet(f"color: {_RED}; font-size: 11pt; font-weight: bold;")
 
     def _on_reconnected(self) -> None:
-        self._conn_label.setText(f"● connected: {self._conn_port_name}")
-        self._conn_label.setStyleSheet(f"color: {_GREEN}; font-size: 11pt; font-weight: bold;")
+        self._conn_label.setText(self._conn_text(self._conn_in_port_name, self._conn_out_port_name))
+        color = self._conn_color(self._conn_in_port_name, self._conn_out_port_name)
+        self._conn_label.setStyleSheet(f"color: {color}; font-size: 11pt; font-weight: bold;")
 
     def _on_beat(self, beat_num: int) -> None:
         self._lfo_panel.on_beat(beat_num)

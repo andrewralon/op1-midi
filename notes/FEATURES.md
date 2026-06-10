@@ -1,7 +1,6 @@
 # Features
 
 ## To do
-- [ ] Ease In curve: add `ease in` LFO waveform — the complement of `log`; each half-cycle lingers at the extreme then accelerates through the transition (slow start, sharp arrival). Completes the ease-in / ease-out pair.
 - [ ] Sweep curves: add `sweep up` and `sweep down` LFO waveforms — a chirp/frequency-sweep shape where the oscillation rate accelerates (or decelerates) across the cycle. Naturally one-shot; a sweep-up starts at the minimum rate and reaches the maximum rate by the end of one cycle.
 - [ ] One-shot LFOs: add a `loop` flag to `LfoClip` (default true). When false, the engine auto-removes the LFO after one full cycle. UI needs a "start once" or "1-shot" trigger or a 1x toggle alongside Start. Sweep curves should default to one-shot. The active LFOs list would show them disappearing automatically on completion.
 - [ ] Master LFO support (tempo, volume, compression, etc.): add an **M** track button (same 3-state style as the 1-4 buttons, colored `_ACCENT` / green) for targeting master/global parameters. Selecting M with a master-capable param (e.g. Tempo) routes the LFO to that master target; clicking M a second time inverts the curve, just like the per-track invert already works. Generalizes to future master params (master volume, master compression) without further UI changes.
@@ -42,3 +41,4 @@
 - [x] show_palette.py: dev script that opens a PyQt6 window showing all color swatches and hex values from the current palette
 - [x] LFO curve colors match tracks: waveform preview draws in each selected track's color; multiple non-inverted tracks alternate colors in 16px segments; inverted tracks draw a second mirrored curve in their own colors; Tempo LFO uses accent green
 - [x] Active LFO waveform view: selecting rows in the active LFOs list shows each selected LFO as its own curve (correct wave shape, rate, track color); deselects on click-away within app; persists when app goes to background; click selected row again to deselect
+- [x] Ease In LFO curve: exponential shape — slow start, fast arrival; the exact complement of `log` (which is fast start, slow arrival). Each half-cycle uses `(10^t − 1) / 9` to mirror the `log1p` mapping.

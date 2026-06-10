@@ -26,25 +26,30 @@ def _find_op1(names: list[str]) -> str | None:
     return None
 
 
-def _prompt_user(names: list[str], direction: str) -> str:
+def _prompt_user(names: list[str], direction: str) -> str | None:
+    """Prompt the user to pick a port. Returns None if 'no device' is chosen."""
     print(f"available MIDI {direction} ports:")
     for i, name in enumerate(names):
         print(f"  [{i + 1}] {name}")
+    print(f"  [0] no device")
     while True:
         raw = input(f"select {direction} port number (or q to quit): ").strip()
         if raw.lower() in ("q", "quit"):
             sys.exit(0)
+        if raw == "0":
+            return None
         if raw.isdigit() and 1 <= int(raw) <= len(names):
             return names[int(raw) - 1]
         print("invalid selection, try again.")
 
 
-def connect() -> tuple[mido.ports.BaseInput, mido.ports.BaseOutput]:
+def connect() -> tuple[mido.ports.BaseInput | None, mido.ports.BaseOutput | None]:
     """
     Detect the OP-1 Field and open input+output ports.
 
-    Returns (in_port, out_port).  If auto-detection fails the user is
-    prompted to choose manually.
+    Returns (in_port, out_port). Either element may be None if the user
+    chose 'no device' for that direction.
+    If auto-detection fails the user is prompted to choose manually.
     """
     in_names, out_names = list_ports()
 
@@ -68,6 +73,6 @@ def connect() -> tuple[mido.ports.BaseInput, mido.ports.BaseOutput]:
     else:
         out_name = _prompt_user(out_names, "output")
 
-    in_port = mido.open_input(in_name)
-    out_port = mido.open_output(out_name)
+    in_port  = mido.open_input(in_name)   if in_name  is not None else None
+    out_port = mido.open_output(out_name) if out_name is not None else None
     return in_port, out_port
