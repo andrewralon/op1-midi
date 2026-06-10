@@ -710,16 +710,16 @@ class LfoPanel(QFrame):
 
     def _on_param_changed(self, text: str) -> None:
         param = PARAMETER_LABELS.get(text)
-        is_bpm = param is Parameter.BPM
+        is_tempo = param is Parameter.TEMPO
 
         for btn in self._track_btns.values():
-            btn.setEnabled(not is_bpm)
-        self._invert_check.setEnabled(not is_bpm)
+            btn.setEnabled(not is_tempo)
+        self._invert_check.setEnabled(not is_tempo)
         self._update_track_btn_styles()
 
         self._depth_spin.blockSignals(True)
         self._center_spin.blockSignals(True)
-        if is_bpm:
+        if is_tempo:
             self._depth_spin.setRange(0, 140)
             self._center_spin.setRange(20.0, 300.0)
             current_bpm = self._get_bpm() if self._get_bpm else 100.0
@@ -739,7 +739,7 @@ class LfoPanel(QFrame):
         rate_ticks = _RATE_TICKS[self._rate_spin.value()]
         param      = PARAMETER_LABELS[self._param_combo.currentText()]
 
-        if param is Parameter.BPM:
+        if param is Parameter.TEMPO:
             center = self._center_spin.value()
             depth  = self._depth_spin.value()
             self._preview.set_params(wave, depth, center, rate_ticks)
@@ -756,7 +756,7 @@ class LfoPanel(QFrame):
 
     def _on_use_current(self) -> None:
         param = PARAMETER_LABELS[self._param_combo.currentText()]
-        if param is Parameter.BPM:
+        if param is Parameter.TEMPO:
             if self._get_bpm:
                 self._center_spin.setValue(self._get_bpm())
             return
@@ -771,16 +771,16 @@ class LfoPanel(QFrame):
         wave       = LFO_WAVE_LABELS[self._wave_combo.currentText()]
         rate_ticks = _RATE_TICKS[self._rate_spin.value()]
 
-        if param is Parameter.BPM:
+        if param is Parameter.TEMPO:
             if self._bpm_original is None and self._get_bpm:
                 self._bpm_original = self._get_bpm()
-            # Replace any existing BPM LFO (only one makes sense globally)
-            for lfo in [l for l in self._active_lfos if l.parameter is Parameter.BPM]:
+            # Replace any existing Tempo LFO (only one makes sense globally)
+            for lfo in [l for l in self._active_lfos if l.parameter is Parameter.TEMPO]:
                 self._engine.remove_lfo(lfo)
                 self._active_lfos.remove(lfo)
             lfo = LfoClip(
                 track        = 0,
-                parameter    = Parameter.BPM,
+                parameter    = Parameter.TEMPO,
                 wave         = wave,
                 rate_ticks   = rate_ticks,
                 depth        = self._depth_spin.value(),
@@ -828,7 +828,7 @@ class LfoPanel(QFrame):
 
     def _maybe_restore_bpm(self) -> None:
         if self._bpm_original is not None:
-            if not any(l.parameter is Parameter.BPM for l in self._active_lfos):
+            if not any(l.parameter is Parameter.TEMPO for l in self._active_lfos):
                 if self._set_bpm:
                     self._set_bpm(self._bpm_original)
                 self._bpm_original = None
@@ -840,11 +840,11 @@ class LfoPanel(QFrame):
                 rate_str = f"{lfo.rate_ticks // PPQN}b/cycle"
             else:
                 rate_str = f"{PPQN // lfo.rate_ticks}×/beat"
-            if lfo.parameter is Parameter.BPM:
+            if lfo.parameter is Parameter.TEMPO:
                 lo = max(20,  lfo.center_value - lfo.depth)
                 hi = min(300, lfo.center_value + lfo.depth)
                 self._lfo_list.addItem(QListWidgetItem(
-                    f"BPM  {lfo.wave.value}  {lo}↔{hi}BPM  {rate_str}"
+                    f"Tempo  {lfo.wave.value}  {lo}↔{hi}BPM  {rate_str}"
                 ))
             else:
                 lo = _midi_to_ui(max(0,   lfo.center_value - lfo.depth))
@@ -1171,7 +1171,7 @@ class MainWindow(QMainWindow):
         self._lfo_panel.on_beat(beat_num)
 
     def _on_automation_update(self, track: int, param_name: str, value: int) -> None:
-        if param_name == Parameter.BPM.value:
+        if param_name == Parameter.TEMPO.value:
             self._set_bpm_from_lfo(float(value))
             return
         strip = self._strips.get(track)

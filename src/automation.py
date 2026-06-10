@@ -39,7 +39,7 @@ class Parameter(Enum):
     VOLUME = "volume"
     PAN    = "pan"
     MUTE   = "mute"
-    BPM    = "bpm"
+    TEMPO  = "tempo"
 
 
 # Displayed names for the UI combo box, in order
@@ -55,7 +55,7 @@ PARAMETER_LABELS: dict[str, Parameter] = {
     "Volume": Parameter.VOLUME,
     "Pan":    Parameter.PAN,
     "Mute":   Parameter.MUTE,
-    "BPM":    Parameter.BPM,
+    "Tempo":  Parameter.TEMPO,
 }
 
 
@@ -162,7 +162,7 @@ class LfoClip:
         if self.inverted:
             y = -y
         raw = round(self.center_value + y * self.depth)
-        if self.parameter is Parameter.BPM:
+        if self.parameter is Parameter.TEMPO:
             return max(20, min(300, raw))
         return max(0, min(127, raw))
 
