@@ -1,26 +1,20 @@
 # op1-lfo-hero
 
-Custom MIDI LFOs (low frequency oscillators) for the Teenage Engineering OP-1 Field synthesizer to control per-track volume, pan, and mute with automation curves. 
+Custom MIDI LFOs (low frequency oscillators) for the Teenage Engineering OP-1 Field synthesizer to control per-track volume, pan, mute, and tempo with automation curves. Handles these OP-1 tempo modes:
+1. `BEAT MATCH` aka `op1` (ext clock) -> op1 sends clock to app: used to sync the LFOs
+2. `MIDI SYNC` aka `app` (int clock) -> app sends clock to op1: generates tempo, transport, and tape navigation commands
 
-![beat match](images/ss-beat-match.png)
-![sync mode](images/ss-midi-sync.png)
-
-This app handles these OP-1 MIDI clock modes:
-1. `Beat Match` (ext clock) -> OP1 sends clock to app: used to sync the LFOs
-2. `Midi Sync` (int clock) -> app sends clock to OP1: generates tempo, transport, and tape navigation commands
-
----
-
-## Requirements
-
-- Teenage Engineering OP-1 Field
-- USB-C cable
-- Python 3.11 or newer
-- macOS (tested) or Windows/Linux (untested but should work)
+![screenshot-1](images/ss-1.png)
 
 ---
 
 ## Running the App
+
+**Requirements:**
+- Teenage Engineering OP-1 Field
+- USB-C cable
+- Python 3.11 or newer
+- macOS (tested) or Windows/Linux (untested but should work)
 
 With the OP-1 connected and the virtual environment activated:
 
