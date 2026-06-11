@@ -8,7 +8,7 @@ Curve math:
   LINEAR   — constant rate of change
   SINE     — smooth S-curve: slow at both ends, fastest at midpoint
   EXP      — accelerates from the start (quadratic)
-  EASE_OUT — decelerates toward the end (quadratic)
+  LOG      — decelerates toward the end (quadratic)
   HOLD     — stays at start_value, snaps to end_value at the last tick
 
 AutomationEngine.on_tick() is wired as ClockListener's tick_callback, so it
@@ -34,7 +34,7 @@ class CurveShape(Enum):
     LINEAR   = auto()
     SINE     = auto()
     EXP      = auto()
-    EASE_OUT = auto()
+    LOG      = auto()
     HOLD     = auto()
 
 
@@ -50,7 +50,7 @@ CURVE_LABELS: dict[str, CurveShape] = {
     "linear":   CurveShape.LINEAR,
     "sine":     CurveShape.SINE,
     "exp":      CurveShape.EXP,
-    "ease out": CurveShape.EASE_OUT,
+    "log":      CurveShape.LOG,
     "hold":     CurveShape.HOLD,
 }
 
@@ -72,7 +72,7 @@ def _apply_curve(t: float, shape: CurveShape) -> float:
         return (1.0 - math.cos(math.pi * t)) / 2.0
     if shape is CurveShape.EXP:
         return t * t
-    if shape is CurveShape.EASE_OUT:
+    if shape is CurveShape.LOG:
         return 1.0 - (1.0 - t) ** 2
     if shape is CurveShape.HOLD:
         return 0.0 if t < 1.0 else 1.0

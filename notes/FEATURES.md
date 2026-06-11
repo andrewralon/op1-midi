@@ -21,7 +21,7 @@
 - [x] Controller: CC 7 (volume), CC 9 (mute), CC 10 (pan) on channels 1-4
 - [x] CLI test script (test_cli.py): live BPM, mute toggle every 4 beats
 - [x] PyQt6 desktop UI: dark theme, 4 track strips
-- [x] Curve automation engine: Linear, Sine, Ease In/Out, Hold — beat-synchronized, loopable
+- [x] Curve automation engine: Linear, Sine, Log, Exp, Hold — beat-synchronized, loopable
 - [x] Automation panel in UI: per-track clip scheduling with active clip list
 - [x] App → OP-1 sync: moving a control in the app sends CC to the OP-1 (volume, pan, mute)
 - [x] Track color accuracy: matched from OP-1 Field mixer screen — blue, ochre, blue-gray, brick orange-red
