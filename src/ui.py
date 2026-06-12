@@ -465,7 +465,7 @@ class WaveformPreview(QWidget):
         self._inverted_colors = inverted_colors
         self.update()
 
-    _SEGMENT_PX = 20  # pixels per color alternation segment when multiple tracks are selected
+    _SEGMENT_FRAC = 0.0375  # fraction of widget width per color alternation segment
 
     def paintEvent(self, event) -> None:
         p = QPainter(self)
@@ -520,7 +520,7 @@ class WaveformPreview(QWidget):
                     color = colors[0]
                 else:
                     mid_x     = (prev_pt.x() + pt.x()) / 2.0
-                    color_idx = int(mid_x / self._SEGMENT_PX) % len(colors)
+                    color_idx = int(mid_x / max(1, w * self._SEGMENT_FRAC)) % len(colors)
                     color     = colors[color_idx]
                 if color != prev_color:
                     pen = QPen(QColor(color), 2)
