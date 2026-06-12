@@ -590,7 +590,7 @@ class TrackStrip(QFrame):
         _df.setWeight(QFont.Weight.Bold)
         _df.setStretch(100)
 
-        _init = f"{_midi_to_ui(115):02d}"
+        _init = f"{90:02d}"
 
         self._vol_d1 = QLabel(_init[0])
         self._vol_d1.setFont(_df)
@@ -606,7 +606,7 @@ class TrackStrip(QFrame):
 
         self._vol_slider = VolumeSlider()
         self._vol_slider.setRange(0, 99)
-        self._vol_slider.setValue(_midi_to_ui(115))
+        self._vol_slider.setValue(90)
         self._vol_slider.setSizePolicy(
             QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Expanding
         )
