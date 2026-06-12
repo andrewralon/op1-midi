@@ -1,6 +1,6 @@
 # op1-lfo-hero
 
-Custom MIDI LFOs (low frequency oscillators) for the Teenage Engineering OP-1 Field synthesizer to control per-track volume, pan, mute, and tempo with automation curves. Handles these OP-1 tempo modes:
+Custom MIDI LFOs (low frequency oscillators) for the Teenage Engineering OP-1 Field synthesizer. Controls per-track volume, pan, mute, FX, LFO parameters, and master FX/compressor parameters with beat-synchronized automation curves. Handles these OP-1 tempo modes:
 1. `BEAT MATCH` aka `op1` (ext clock) -> op1 sends clock to app: used to sync the LFOs
 2. `MIDI SYNC` aka `app` (int clock) -> app sends clock to op1: generates tempo, transport, and tape navigation commands
 
@@ -12,7 +12,7 @@ Custom MIDI LFOs (low frequency oscillators) for the Teenage Engineering OP-1 Fi
 
 **Requirements:**
 - Teenage Engineering OP-1 Field
-- USB-C cable
+- USB-C cable or Bluetooth
 - Python 3.11 or newer
 - macOS (tested) or Windows/Linux (untested but should work)
 
@@ -23,7 +23,11 @@ source venv/bin/activate
 python -m src.app
 ```
 
-The app auto-detects the OP-1 by port name (looks for "op-1" case-insensitively). If detection fails, a dialog will appear — check that the USB-C cable is connected and the OP-1 is powered on.
+The app auto-detects the OP-1 by port name (looks for "op-1" case-insensitively). If exactly one OP-1 port is found it is selected automatically. If multiple OP-1 ports are detected (e.g. USB and Bluetooth both connected) you will be prompted to choose from the full port list.
+
+### Bluetooth MIDI
+
+Bluetooth LE MIDI is supported alongside USB. When the connected port name contains "Bluetooth" the status bar appends **(bt)** with a tooltip noting the ~15ms additional latency. BPM smoothing doubles automatically to absorb BLE jitter. Note that Tempo LFO requires the app to be clock master and is unavailable over Bluetooth.
 
 ### Command-line flags
 
@@ -33,8 +37,6 @@ The app auto-detects the OP-1 by port name (looks for "op-1" case-insensitively)
 | `--no-device` | Run without a MIDI device — all controls are live but no MIDI is sent |
 
 No-device mode also activates automatically if no MIDI input or output ports are found at startup, or if `no device` is selected during manual port selection. The status bar will show **● no device**.
-
-The status bar at the bottom of the window shows the connected port name once MIDI is established.
 
 ---
 
@@ -95,10 +97,47 @@ Each of the four tracks corresponds to an OP-1 Field mixer channel (tracks 1-4 =
 The LFO panel (below the track strips) applies beat-synchronized automation curves to any track parameter.
 
 #### Waveform selector
-Choose the LFO shape: **Sine**, **Triangle**, **Sawtooth**, **Square**, or **Hold** (sample & hold).
+Choose the LFO shape:
+
+| Wave | Description |
+|------|-------------|
+| **Sine** | Smooth S-curve oscillation |
+| **Triangle** | Linear ramp up and down |
+| **Saw** | Linear ramp up, instant reset |
+| **Square** | Instant snap between high and low |
+| **Log** | Fast start, slow arrival each half-cycle |
+| **Exp** | Slow start, fast arrival each half-cycle (complement of Log) |
+| **Sweep Up** | Chirp — oscillation frequency increases linearly across the cycle (4 sweeps total) |
+| **Sweep Down** | Chirp — oscillation frequency decreases linearly across the cycle |
+| **Random** | Sample-and-hold — 8 deterministic steps per cycle, each holding a pseudo-random value |
 
 #### Waveform preview
-A live preview of the selected waveform shape is drawn in the panel. The number of visible cycles scales with the Rate setting.
+A live preview of the selected waveform is drawn in the panel. The number of visible cycles scales with the Rate setting.
+
+When LFOs are running, selecting rows in the **active LFO list** replaces the preview with each selected LFO's actual waveform drawn in its track color. Deselects when you click elsewhere in the app.
+
+#### Track and Master buttons
+
+Each LFO targets one or more tracks. The numbered buttons (1–4) select per-track targets; the green **M** button targets master parameters.
+
+- Click once to activate (normal phase)
+- Click again to invert (flipped phase, marked `[inv]` in the active list)
+- Click a third time to deactivate
+
+For **Tempo** and other master-only parameters, the track 1–4 buttons are disabled and M activates automatically. For per-track parameters (volume, pan, mute, FX, LFO), M is disabled.
+
+#### Parameter selector
+
+| Parameter | Target | CC |
+|-----------|--------|----|
+| volume | Per-track channel volume | CC 7 (ch 1-4) |
+| pan | Per-track pan | CC 10 (ch 1-4) |
+| mute | Per-track mute toggle | CC 9 (ch 1-4) |
+| tempo | App clock BPM (modulates LFO engine tempo) | — |
+| fx 1–4 | Per-track patch FX parameters | CC 54-57 (ch 1-4) |
+| lfo 1–4 | Per-track patch LFO parameters | CC 58-61 (ch 1-4) |
+
+**Tempo LFO:** modulates the app's BPM directly with float precision. The OP-1 display tracks in real time. When the Tempo LFO is stopped the BPM restores to its original value. Requires app-clock mode (MIDI Sync on the OP-1); unavailable when the OP-1 is the clock master or when connected via Bluetooth.
 
 #### Controls (per row)
 
@@ -119,7 +158,7 @@ This means when the primary track's value rises, the secondary tracks' values fa
 - **Pumping sidechain feel** — automate Volume on two tracks so one ducks while the other swells.
 - **Call and response** — run an inverted LFO on a second melody track so phrases naturally dovetail rather than stack.
 
-The active LFO list marks inverted clips with `[inv]` so you can tell them apart at a glance.
+The active LFO list marks inverted clips with `[inv]` so you can tell them apart at a glance. The waveform preview draws each track's curve in its own color.
 
 #### Buttons
 
@@ -136,8 +175,8 @@ The active LFO list marks inverted clips with `[inv]` so you can tell them apart
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/andrewralon/op1-midi.git
-cd op1-midi
+git clone https://github.com/andrewralon/op1-lfo-hero.git
+cd op1-lfo-hero
 ```
 
 ### 2. Create a virtual environment
@@ -177,7 +216,7 @@ This installs:
 ## Troubleshooting
 
 **App shows "MIDI Connection Failed"**
-- Make sure the OP-1 is powered on and connected via USB-C before launching
+- Make sure the OP-1 is powered on and connected via USB-C (or paired via Bluetooth) before launching
 - Try a different USB-C cable (some are charge-only)
 - On macOS, check **System Settings → Privacy & Security** if any MIDI access prompt was dismissed
 
@@ -202,11 +241,22 @@ This installs:
 
 ## MIDI Reference
 
+**Per-track (channels 1-4)**
+
 | CC | Function | Range | Notes |
 |----|----------|-------|-------|
 | 7  | Volume   | 0-127 | Per channel (track 1-4 = channel 1-4) |
 | 9  | Mute     | 0-127 | ≥ 64 = muted |
 | 10 | Pan      | 0-127 | 64 = center |
+| 54-57 | Patch FX params 1-4 | 0-127 | Per track |
+| 58-61 | Patch LFO params 1-4 | 0-127 | Per track |
+
+**Global (channel 1)**
+
+| CC | Function | Range | Notes |
+|----|----------|-------|-------|
+| 70-73 | Master FX params 1-4 | 0-127 | |
+| 74-77 | Master compressor params 1-4 | 0-127 | |
 | 79 | Octave   | 0-127 | < 64 = down, ≥ 64 = up (keyboard/synth mode only) |
 | 82 | Tape prev bar | 127 | Tape navigation |
 | 83 | Tape next bar | 127 | Tape navigation |
