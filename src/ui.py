@@ -98,10 +98,10 @@ _MANUAL_CYCLE: list[TempoMode] = [
 
 
 def _midi_to_ui(v: int) -> int:
-    return round(v * 99 / 127)
+    return v * 99 // 127  # matches OP-1 display formula
 
 def _ui_to_midi(v: int) -> int:
-    return round(v * 127 / 99)
+    return (v * 127 + 98) // 99  # ceiling: guarantees _midi_to_ui(_ui_to_midi(v)) == v
 
 
 # Rate 1 (slowest) → 8 (fastest): ticks per LFO cycle
@@ -605,8 +605,8 @@ class TrackStrip(QFrame):
         self._vol_d2.setFixedWidth(34)
 
         self._vol_slider = VolumeSlider()
-        self._vol_slider.setRange(0, 127)
-        self._vol_slider.setValue(115)
+        self._vol_slider.setRange(0, 99)
+        self._vol_slider.setValue(_midi_to_ui(115))
         self._vol_slider.setSizePolicy(
             QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Expanding
         )
@@ -654,9 +654,9 @@ class TrackStrip(QFrame):
             self._ctrl.set_pan(self._track, cc)
 
     def _on_volume_changed(self, value: int) -> None:
-        _s = f"{_midi_to_ui(value):02d}"; self._vol_d1.setText(_s[0]); self._vol_d2.setText(_s[1])
+        _s = f"{value:02d}"; self._vol_d1.setText(_s[0]); self._vol_d2.setText(_s[1])
         if self._ready:
-            self._ctrl.set_volume(self._track, value)
+            self._ctrl.set_volume(self._track, _ui_to_midi(value))
 
     # ------------------------------------------------------------------
     # External updates
@@ -664,7 +664,7 @@ class TrackStrip(QFrame):
 
     def current_midi_value(self, param: Parameter) -> int:
         if param is Parameter.VOLUME:
-            return self._vol_slider.value()
+            return _ui_to_midi(self._vol_slider.value())
         if param is Parameter.PAN:
             return min(self._pan_dial.value(), 127)
         if param is Parameter.MUTE:
@@ -674,10 +674,11 @@ class TrackStrip(QFrame):
     def set_automation_value(self, param_name: str, value: int) -> None:
         """Update a control from automation — does not re-send CC."""
         if param_name == Parameter.VOLUME.value:
+            ui_val = _midi_to_ui(value)
             self._vol_slider.blockSignals(True)
-            self._vol_slider.setValue(value)
+            self._vol_slider.setValue(ui_val)
             self._vol_slider.blockSignals(False)
-            _s = f"{_midi_to_ui(value):02d}"; self._vol_d1.setText(_s[0]); self._vol_d2.setText(_s[1])
+            _s = f"{ui_val:02d}"; self._vol_d1.setText(_s[0]); self._vol_d2.setText(_s[1])
         elif param_name == Parameter.PAN.value:
             self._pan_dial.blockSignals(True)
             self._pan_dial.setValue(value)
@@ -694,10 +695,11 @@ class TrackStrip(QFrame):
     def update_from_cc(self, control: int, value: int) -> None:
         """Sync UI from OP-1 CC — does not re-send CC."""
         if control == CC_VOLUME:
+            ui_val = _midi_to_ui(value)
             self._vol_slider.blockSignals(True)
-            self._vol_slider.setValue(value)
+            self._vol_slider.setValue(ui_val)
             self._vol_slider.blockSignals(False)
-            _s = f"{_midi_to_ui(value):02d}"; self._vol_d1.setText(_s[0]); self._vol_d2.setText(_s[1])
+            _s = f"{ui_val:02d}"; self._vol_d1.setText(_s[0]); self._vol_d2.setText(_s[1])
         elif control == CC_PAN:
             self._pan_dial.blockSignals(True)
             self._pan_dial.setValue(value)
