@@ -17,12 +17,11 @@ OP1_KEYWORD = "op-1"  # matched case-insensitively against port names
 def is_ble_port(name: str) -> bool:
     """Return True if the port name suggests BLE-MIDI rather than USB.
 
-    On macOS/CoreMIDI, USB MIDI endpoints are named 'Device MIDI N'; BLE-MIDI
-    devices appear with just their Bluetooth advertisement name (no 'MIDI' suffix).
-    This heuristic is accurate on macOS; port naming differs on Linux and Windows.
+    On macOS/CoreMIDI, BLE-MIDI ports include 'Bluetooth' in their name
+    (e.g. 'OP-1 Bluetooth'), while USB ports do not (e.g. 'OP-1').
     """
     low = name.lower()
-    return OP1_KEYWORD in low and "midi" not in low
+    return OP1_KEYWORD in low and "bluetooth" in low
 
 
 def list_ports() -> tuple[list[str], list[str]]:
@@ -30,11 +29,8 @@ def list_ports() -> tuple[list[str], list[str]]:
     return mido.get_input_names(), mido.get_output_names()
 
 
-def _find_op1(names: list[str]) -> str | None:
-    for name in names:
-        if OP1_KEYWORD in name.lower():
-            return name
-    return None
+def _find_op1_ports(names: list[str]) -> list[str]:
+    return [n for n in names if OP1_KEYWORD in n.lower()]
 
 
 def _prompt_user(names: list[str], direction: str) -> str | None:
@@ -60,7 +56,9 @@ def connect() -> tuple[mido.ports.BaseInput | None, mido.ports.BaseOutput | None
 
     Returns (in_port, out_port). Either element may be None if the user
     chose 'no device' for that direction.
-    If auto-detection fails the user is prompted to choose manually.
+    If exactly one OP-1 port is found it is selected automatically.
+    If multiple OP-1 ports are found the user is prompted from the full port list.
+    If no OP-1 is found the user is also prompted from the full port list.
     """
     in_names, out_names = list_ports()
 
@@ -71,17 +69,26 @@ def connect() -> tuple[mido.ports.BaseInput | None, mido.ports.BaseOutput | None
     for name in out_names:
         print(f"  • {name}")
 
-    in_name = _find_op1(in_names)
-    if in_name:
+    in_matches = _find_op1_ports(in_names)
+    if len(in_matches) == 1:
+        in_name = in_matches[0]
         print(f"auto-detected op1 input:  {in_name}")
     else:
-        print("op1 not found by name — manual selection required.")
+        if len(in_matches) > 1:
+            print("multiple OP-1 input ports found — manual selection required.")
+        else:
+            print("op1 not found by name — manual selection required.")
         in_name = _prompt_user(in_names, "input")
 
-    out_name = _find_op1(out_names)
-    if out_name:
+    out_matches = _find_op1_ports(out_names)
+    if len(out_matches) == 1:
+        out_name = out_matches[0]
         print(f"auto-detected op1 output: {out_name}")
     else:
+        if len(out_matches) > 1:
+            print("multiple OP-1 output ports found — manual selection required.")
+        else:
+            print("op1 not found by name — manual selection required.")
         out_name = _prompt_user(out_names, "output")
 
     in_port  = mido.open_input(in_name)   if in_name  is not None else None
