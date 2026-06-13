@@ -576,8 +576,8 @@ class TrackStrip(QFrame):
         outer.addWidget(self._mute_btn)
 
         body = QVBoxLayout()
-        body.setSpacing(10)
-        body.setContentsMargins(3, 10, 3, 10)
+        body.setSpacing(14)
+        body.setContentsMargins(3, 14, 3, 14)
 
         self._pan_dial = PanDial()
         self._pan_dial.setRange(0, 128)
@@ -814,7 +814,7 @@ class LfoPanel(QFrame):
         )
 
         root = QVBoxLayout(self)
-        root.setSpacing(8)
+        root.setSpacing(10)
         root.setContentsMargins(10, 8, 10, 8)
 
         # ── Row 1: Track buttons ──
@@ -830,9 +830,9 @@ class LfoPanel(QFrame):
             self._track_btns[t] = btn
             hdr.addWidget(btn)
             if t < 4:
-                hdr.addSpacing(6)
+                hdr.addSpacing(_LABEL_GAP)
 
-        hdr.addSpacing(_LABEL_GAP)
+        hdr.addSpacing(_LABEL_GAP * 2)
         self._master_btn = TrackBtn("m", 0, initial_state=0, color=_ACCENT, min_state=0)
         self._master_btn.setFixedSize(36, 36)
         self._master_btn.setEnabled(False)  # enabled only for master params (e.g. tempo)
@@ -974,7 +974,7 @@ class LfoPanel(QFrame):
             f"  border: 1px solid {_BORDER}; border-radius: 4px; font-size: 13pt; }}"
             f"QListWidget::item:selected {{ background-color: {_BORDER}; color: {_TEXT}; }}"
         )
-        self._lfo_list.setFixedHeight(96)
+        self._lfo_list.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
 
         bottom_row.addLayout(btn_col)
         bottom_row.addWidget(self._lfo_list, stretch=1)
