@@ -439,7 +439,7 @@ class WaveformPreview(QWidget):
         self._normal_colors: list[str]   = [_ACCENT]
         self._inverted_colors: list[str] = []
         self._lfos_override: list | None = None
-        self.setFixedHeight(55)
+        self.setFixedHeight(65)
         self.setStyleSheet(
             f"background-color: {_BG};"
             f"border: 1px solid {_BORDER};"
@@ -570,21 +570,21 @@ class TrackStrip(QFrame):
         self._mute_btn = QPushButton(f"{self._track}")
         self._mute_btn.setFont(hf)
         self._mute_btn.setCheckable(True)
-        self._mute_btn.setFixedHeight(28)
+        self._mute_btn.setFixedHeight(30)
         self._mute_btn.clicked.connect(self._on_mute_clicked)
         self._set_mute_style(False)
         outer.addWidget(self._mute_btn)
 
         body = QVBoxLayout()
-        body.setSpacing(8)
-        body.setContentsMargins(3, 8, 3, 4)
+        body.setSpacing(14)
+        body.setContentsMargins(3, 14, 3, 4)
 
         self._pan_dial = PanDial()
         self._pan_dial.setRange(0, 128)
         self._pan_dial.setValue(64)
         self._pan_dial.setNotchesVisible(False)
         self._pan_dial.setWrapping(False)
-        self._pan_dial.setFixedSize(36, 36)
+        self._pan_dial.setFixedSize(44, 44)
         self._pan_dial.valueChanged.connect(self._on_pan_changed)
 
         pan_row = QHBoxLayout()
@@ -622,7 +622,7 @@ class TrackStrip(QFrame):
         self._vol_slider.setSizePolicy(
             QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Expanding
         )
-        self._vol_slider.setMinimumHeight(85)
+        self._vol_slider.setMinimumHeight(110)
         self._vol_slider.setFixedWidth(16)
         self._vol_slider.valueChanged.connect(self._on_volume_changed)
 
@@ -814,8 +814,8 @@ class LfoPanel(QFrame):
         )
 
         root = QVBoxLayout(self)
-        root.setSpacing(10)
-        root.setContentsMargins(10, 8, 10, 8)
+        root.setSpacing(16)
+        root.setContentsMargins(10, 10, 10, 10)
 
         # ── Row 1: title + Track buttons / Param / Wave ──
         hdr = QHBoxLayout()
@@ -978,7 +978,7 @@ class LfoPanel(QFrame):
             f"  border: 1px solid {_BORDER}; border-radius: 4px; font-size: 13pt; }}"
             f"QListWidget::item:selected {{ background-color: {_BORDER}; color: {_TEXT}; }}"
         )
-        self._lfo_list.setFixedHeight(80)
+        self._lfo_list.setFixedHeight(96)
 
         bottom_row.addLayout(btn_col)
         bottom_row.addWidget(self._lfo_list, stretch=1)
@@ -1363,14 +1363,14 @@ class MainWindow(QMainWindow):
 
     def _setup_ui(self, controller: Controller, engine: AutomationEngine, in_port_name: str, out_port_name: str, clock_gen) -> None:
         self.setWindowTitle("op1 lfo hero")
-        self.setMinimumSize(535, 510)
+        self.setMinimumSize(535, 600)
         self.setStyleSheet(f"QMainWindow {{ background-color: {_BG}; }}")
 
         central = QWidget()
         self.setCentralWidget(central)
         root = QVBoxLayout(central)
-        root.setSpacing(10)
-        root.setContentsMargins(10, 10, 10, 10)
+        root.setSpacing(12)
+        root.setContentsMargins(10, 14, 10, 14)
 
         # ── Transport + octave buttons (left of tracks) ──
         _btn_ss = (
@@ -1489,7 +1489,7 @@ class MainWindow(QMainWindow):
         tracks_row.addStretch()
 
         tracks_widget = QWidget()
-        tracks_widget.setMaximumHeight(188)
+        tracks_widget.setMaximumHeight(220)
         _tw_layout = QVBoxLayout(tracks_widget)
         _tw_layout.setContentsMargins(0, 0, 0, 0)
         _tw_layout.addLayout(tracks_row)
