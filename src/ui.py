@@ -334,7 +334,7 @@ class SegmentDigit(QWidget):
 class VolumeSlider(QSlider):
     """Vertical volume fader with a chamfered LED-bar-segment handle."""
 
-    _H  = 12   # handle height px
+    _H  = 11   # handle height px
     _W  = 23   # handle width px
     _GW = 4    # groove width px
 
@@ -439,7 +439,7 @@ class WaveformPreview(QWidget):
         self._normal_colors: list[str]   = [_ACCENT]
         self._inverted_colors: list[str] = []
         self._lfos_override: list | None = None
-        self.setFixedHeight(65)
+        self.setFixedHeight(55)
         self.setStyleSheet(
             f"background-color: {_BG};"
             f"border: 1px solid {_BORDER};"
@@ -556,7 +556,7 @@ class TrackStrip(QFrame):
             f"   border: 1px solid {_BORDER};"
             "}"
         )
-        self.setFixedWidth(100)
+        self.setFixedWidth(75)
 
         outer = QVBoxLayout(self)
         outer.setSpacing(0)
@@ -564,27 +564,27 @@ class TrackStrip(QFrame):
 
         # Header = mute toggle button (just the track number)
         hf = QFont()
-        hf.setPointSize(20)
+        hf.setPointSize(18)
         hf.setBold(True)
 
         self._mute_btn = QPushButton(f"{self._track}")
         self._mute_btn.setFont(hf)
         self._mute_btn.setCheckable(True)
-        self._mute_btn.setFixedHeight(30)
+        self._mute_btn.setFixedHeight(28)
         self._mute_btn.clicked.connect(self._on_mute_clicked)
         self._set_mute_style(False)
         outer.addWidget(self._mute_btn)
 
         body = QVBoxLayout()
-        body.setSpacing(14)
-        body.setContentsMargins(6, 14, 6, 4)
+        body.setSpacing(8)
+        body.setContentsMargins(3, 8, 3, 4)
 
         self._pan_dial = PanDial()
         self._pan_dial.setRange(0, 128)
         self._pan_dial.setValue(64)
         self._pan_dial.setNotchesVisible(False)
         self._pan_dial.setWrapping(False)
-        self._pan_dial.setFixedSize(44, 44)
+        self._pan_dial.setFixedSize(36, 36)
         self._pan_dial.valueChanged.connect(self._on_pan_changed)
 
         pan_row = QHBoxLayout()
@@ -598,7 +598,7 @@ class TrackStrip(QFrame):
         fader_row.setContentsMargins(0, 0, 0, 0)
 
         _df = QFont("DIN Alternate")
-        _df.setPointSize(40)
+        _df.setPointSize(26)
         _df.setWeight(QFont.Weight.Bold)
         _df.setStretch(100)
 
@@ -608,13 +608,13 @@ class TrackStrip(QFrame):
         self._vol_d1.setFont(_df)
         self._vol_d1.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
         self._vol_d1.setStyleSheet(f"color: {_TEXT};")
-        self._vol_d1.setFixedWidth(34)
+        self._vol_d1.setFixedWidth(22)
 
         self._vol_d2 = QLabel(_init[1])
         self._vol_d2.setFont(_df)
         self._vol_d2.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
         self._vol_d2.setStyleSheet(f"color: {_TEXT};")
-        self._vol_d2.setFixedWidth(34)
+        self._vol_d2.setFixedWidth(22)
 
         self._vol_slider = VolumeSlider()
         self._vol_slider.setRange(0, 99)
@@ -622,8 +622,8 @@ class TrackStrip(QFrame):
         self._vol_slider.setSizePolicy(
             QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Expanding
         )
-        self._vol_slider.setMinimumHeight(110)
-        self._vol_slider.setFixedWidth(23)
+        self._vol_slider.setMinimumHeight(85)
+        self._vol_slider.setFixedWidth(16)
         self._vol_slider.valueChanged.connect(self._on_volume_changed)
 
         fader_row.addStretch()
@@ -741,7 +741,7 @@ class TrackBtn(QPushButton):
         self._min_state = min_state
         self.setFlat(True)
         f = QFont()
-        f.setPointSize(20)
+        f.setPointSize(16)
         f.setBold(True)
         self.setFont(f)
         self.clicked.connect(self._cycle)
@@ -814,8 +814,8 @@ class LfoPanel(QFrame):
         )
 
         root = QVBoxLayout(self)
-        root.setSpacing(16)
-        root.setContentsMargins(14, 10, 14, 10)
+        root.setSpacing(10)
+        root.setContentsMargins(10, 8, 10, 8)
 
         # ── Row 1: title + Track buttons / Param / Wave ──
         hdr = QHBoxLayout()
@@ -827,15 +827,15 @@ class LfoPanel(QFrame):
         self._track_btns: dict[int, TrackBtn] = {}
         for t in (1, 2, 3, 4):
             btn = TrackBtn(str(t), t, initial_state=1 if t == 1 else 0)
-            btn.setFixedSize(36, 36)
+            btn.setFixedSize(30, 30)
             self._track_btns[t] = btn
             hdr.addWidget(btn)
             if t < 4:
-                hdr.addSpacing(_LABEL_GAP)
+                hdr.addSpacing(4)
 
-        hdr.addSpacing(_LABEL_GAP * 2)
+        hdr.addSpacing(_LABEL_GAP)
         self._master_btn = TrackBtn("m", 0, initial_state=0, color=_ACCENT, min_state=0)
-        self._master_btn.setFixedSize(36, 36)
+        self._master_btn.setFixedSize(30, 30)
         self._master_btn.setEnabled(False)  # enabled only for master params (e.g. tempo)
         hdr.addWidget(self._master_btn)
 
@@ -880,7 +880,7 @@ class LfoPanel(QFrame):
         self._rate_spin = QSpinBox()
         self._rate_spin.setRange(1, 8)
         self._rate_spin.setValue(3)   # default: 4 beats/cycle
-        self._rate_spin.setFixedWidth(56)
+        self._rate_spin.setFixedWidth(48)
         self._rate_spin.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self._rate_spin.setStyleSheet(_spin_style)
 
@@ -891,7 +891,7 @@ class LfoPanel(QFrame):
         self._depth_spin.setSingleStep(1.0)
         self._depth_spin.setRange(0.0, 49.0)
         self._depth_spin.setValue(25.0)
-        self._depth_spin.setFixedWidth(78)
+        self._depth_spin.setFixedWidth(66)
         self._depth_spin.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self._depth_spin.setStyleSheet(_double_spin_style)
 
@@ -900,7 +900,7 @@ class LfoPanel(QFrame):
         self._center_spin.setSingleStep(1.0)
         self._center_spin.setRange(0.0, 99.0)
         self._center_spin.setValue(90.0)  # ≈ MIDI 64 (center)
-        self._center_spin.setFixedWidth(78)
+        self._center_spin.setFixedWidth(66)
         self._center_spin.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self._center_spin.setStyleSheet(_double_spin_style)
 
@@ -908,7 +908,7 @@ class LfoPanel(QFrame):
         use_cur_btn.setStyleSheet(
             f"QPushButton {{ background-color: {_HOVER}; color: {_TEXT};"
             f"  border: none; border-radius: 4px; font-size: 12pt;"
-            f"  padding: 4px 14px; }}"
+            f"  padding: 4px 10px; }}"
             f"QPushButton:hover {{ background-color: {_KNOB_RIM}; }}"
         )
         use_cur_btn.clicked.connect(self._on_use_current)
@@ -932,7 +932,7 @@ class LfoPanel(QFrame):
 
         # ── Rows 5+6: action buttons (left) + Active LFOs (right) ──
         bottom_row = QHBoxLayout()
-        bottom_row.setSpacing(12)
+        bottom_row.setSpacing(8)
         bottom_row.setContentsMargins(0, 0, 0, 0)
 
         btn_col = QVBoxLayout()
@@ -943,7 +943,7 @@ class LfoPanel(QFrame):
         loop_btn.setFixedHeight(28)
         loop_btn.setStyleSheet(
             f"QPushButton {{ background-color: {_DARKGREEN}; color: {_TEXT};"
-            f"  border: none; border-radius: 4px; font-size: 18pt; padding: 0px 14px; }}"
+            f"  border: none; border-radius: 4px; font-size: 18pt; padding: 0px 10px; }}"
             f"QPushButton:hover {{ background-color: #2a6a2a; }}"
         )
         loop_btn.clicked.connect(self._on_start)
@@ -952,7 +952,7 @@ class LfoPanel(QFrame):
         oneshot_btn.setFixedHeight(28)
         oneshot_btn.setStyleSheet(
             f"QPushButton {{ background-color: {_DARKGREEN}; color: {_TEXT};"
-            f"  border: none; border-radius: 4px; font-size: 18pt; padding: 0px 14px; }}"
+            f"  border: none; border-radius: 4px; font-size: 18pt; padding: 0px 10px; }}"
             f"QPushButton:hover {{ background-color: #2a6a2a; }}"
         )
         oneshot_btn.clicked.connect(self._on_start_oneshot)
@@ -961,7 +961,7 @@ class LfoPanel(QFrame):
         clear_btn.setFixedHeight(28)
         clear_btn.setStyleSheet(
             f"QPushButton {{ background-color: {_HOVER}; color: {_TEXT};"
-            f"  border: none; border-radius: 4px; font-size: 18pt; padding: 0px 14px; }}"
+            f"  border: none; border-radius: 4px; font-size: 18pt; padding: 0px 10px; }}"
             f"QPushButton:hover {{ background-color: {_KNOB_RIM}; }}"
         )
         clear_btn.clicked.connect(self._on_stop_all)
@@ -978,7 +978,7 @@ class LfoPanel(QFrame):
             f"  border: 1px solid {_BORDER}; border-radius: 4px; font-size: 13pt; }}"
             f"QListWidget::item:selected {{ background-color: {_BORDER}; color: {_TEXT}; }}"
         )
-        self._lfo_list.setFixedHeight(96)
+        self._lfo_list.setFixedHeight(80)
 
         bottom_row.addLayout(btn_col)
         bottom_row.addWidget(self._lfo_list, stretch=1)
@@ -1363,14 +1363,14 @@ class MainWindow(QMainWindow):
 
     def _setup_ui(self, controller: Controller, engine: AutomationEngine, in_port_name: str, out_port_name: str, clock_gen) -> None:
         self.setWindowTitle("op1 lfo hero")
-        self.setMinimumSize(700, 600)
+        self.setMinimumSize(535, 510)
         self.setStyleSheet(f"QMainWindow {{ background-color: {_BG}; }}")
 
         central = QWidget()
         self.setCentralWidget(central)
         root = QVBoxLayout(central)
-        root.setSpacing(12)
-        root.setContentsMargins(18, 14, 18, 14)
+        root.setSpacing(10)
+        root.setContentsMargins(10, 10, 10, 10)
 
         # ── Transport + octave buttons (left of tracks) ──
         _btn_ss = (
@@ -1382,7 +1382,7 @@ class MainWindow(QMainWindow):
 
         def _make_btn(label: str) -> QPushButton:
             b = QPushButton(label)
-            b.setFixedSize(44, 44)
+            b.setFixedSize(38, 38)
             b.setStyleSheet(_btn_ss)
             return b
 
@@ -1407,7 +1407,7 @@ class MainWindow(QMainWindow):
         octave_row.addWidget(oct_right_btn)
 
         btn_widget = QWidget()
-        btn_widget.setFixedWidth(105)
+        btn_widget.setFixedWidth(88)
         btn_col = QVBoxLayout(btn_widget)
         btn_col.setSpacing(10)
         btn_col.setContentsMargins(0, 0, 0, 0)
@@ -1418,7 +1418,7 @@ class MainWindow(QMainWindow):
 
         # ── Track strips, centered as a group with button column ──
         tracks_row = QHBoxLayout()
-        tracks_row.setSpacing(10)
+        tracks_row.setSpacing(6)
         tracks_row.addStretch()
         tracks_row.addWidget(btn_widget)
         for t in (1, 2, 3, 4):
@@ -1427,7 +1427,7 @@ class MainWindow(QMainWindow):
             tracks_row.addWidget(strip)
 
         bpm_widget = QWidget()
-        bpm_widget.setFixedWidth(105)
+        bpm_widget.setFixedWidth(96)
         bpm_layout = QVBoxLayout(bpm_widget)
         bpm_layout.setSpacing(1)
         bpm_layout.setContentsMargins(2, 0, 2, 0)
@@ -1489,7 +1489,7 @@ class MainWindow(QMainWindow):
         tracks_row.addStretch()
 
         tracks_widget = QWidget()
-        tracks_widget.setMaximumHeight(220)
+        tracks_widget.setMaximumHeight(188)
         _tw_layout = QVBoxLayout(tracks_widget)
         _tw_layout.setContentsMargins(0, 0, 0, 0)
         _tw_layout.addLayout(tracks_row)
