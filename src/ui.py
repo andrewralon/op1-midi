@@ -75,7 +75,7 @@ _WAVE_SVG       = _ASSETS + "wave.svg"
 _LOOP_SVG       = _ASSETS + "loop.svg"
 
 # OTHER - UI CONSTRAINTS
-_LABEL_GAP  = 8  # px between a label and its paired control (dropdown, spinbox, etc.)
+_LABEL_GAP  = 6   # px between a label and its paired control (dropdown, spinbox, etc.)
 _ICON_PT    = 26  # pt size for unicode icon labels
 
 
@@ -576,8 +576,8 @@ class TrackStrip(QFrame):
         outer.addWidget(self._mute_btn)
 
         body = QVBoxLayout()
-        body.setSpacing(8)
-        body.setContentsMargins(3, 8, 3, 8)
+        body.setSpacing(10)
+        body.setContentsMargins(3, 10, 3, 10)
 
         self._pan_dial = PanDial()
         self._pan_dial.setRange(0, 128)
@@ -741,7 +741,7 @@ class TrackBtn(QPushButton):
         self._min_state = min_state
         self.setFlat(True)
         f = QFont()
-        f.setPointSize(16)
+        f.setPointSize(20)
         f.setBold(True)
         self.setFont(f)
         self.clicked.connect(self._cycle)
@@ -814,8 +814,8 @@ class LfoPanel(QFrame):
         )
 
         root = QVBoxLayout(self)
-        root.setSpacing(16)
-        root.setContentsMargins(10, 10, 10, 10)
+        root.setSpacing(8)
+        root.setContentsMargins(10, 8, 10, 8)
 
         # ── Row 1: Track buttons ──
         hdr = QHBoxLayout()
@@ -908,7 +908,6 @@ class LfoPanel(QFrame):
         )
         snap_btn.clicked.connect(self._on_use_current)
 
-        params_row.addStretch(1)
         params_row.addWidget(self._dim_label("⏱", _ICON_PT))
         params_row.addSpacing(_LABEL_GAP)
         params_row.addWidget(self._rate_spin)
@@ -920,9 +919,8 @@ class LfoPanel(QFrame):
         params_row.addWidget(SvgIcon(_CENTER_SVG, 30))
         params_row.addSpacing(_LABEL_GAP)
         params_row.addWidget(self._center_spin)
-        params_row.addStretch(1)
+        params_row.addSpacing(_LABEL_GAP)
         params_row.addWidget(snap_btn)
-        params_row.addStretch(1)
         root.addLayout(params_row)
 
         # ── Row 4: waveform preview ──
