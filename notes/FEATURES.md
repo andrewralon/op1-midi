@@ -5,7 +5,6 @@
 - [ ] Desktop executables: package the app as a standalone binary for macOS and Windows using PyInstaller (or similar), so users can run it without a Python environment.
 - [ ] GitHub Actions release workflow: on GitHub release publish, automatically build the macOS and Windows executables and upload them as release artifacts. Triggered by the `release: published` event; one job per platform using hosted runners.
 - [ ] iOS port: refactor the UI layer to run on iOS (e.g. via Kivy, BeeWare/Toga, or a web-based frontend). Keep the existing PyQt6 desktop path intact so the app can still be launched from Python; the iOS target should share the core engine (`automation.py`, `clock.py`, `controller.py`) and add a separate UI entry point.
-- [ ] Responsive layout: allow the window to be freely resized (width and height). Keep icon-like controls fixed (pan dial, transport buttons, LFO track buttons, spinbox widths). Let track strips, waveform preview, LFO list, and volume faders scale to fill available space.
 - [ ] Automation / fader conflict: manually moving a fader while automation is running should cancel that automation clip
 - [ ] Preset saving: save/load slider positions and automation clips as JSON
 
@@ -49,5 +48,6 @@
 - [x] Master LFO support: **M** button added to the LFO panel (green, same 3-state style as tracks). Selecting a master param (tempo) disables track 1-4 buttons and enables M; M auto-activates to "on" state. Second click inverts the curve, third click turns M off — identical behavior to per-track buttons. `_MASTER_PARAMS` frozenset makes adding future master params (master volume, compression) a one-line change.
 - [x] Master FX params: add OP-1 MIDI CC params for master FX controls (see OP-1 MIDI spec)
 - [x] Master volume + compression params: add OP-1 MIDI CC params for master volume and master compression (see OP-1 MIDI spec)
+- [x] Responsive layout: allow the window to be freely resized (width and height). Keep icon-like controls fixed (pan dial, transport buttons, LFO track buttons, spinbox widths). Let track strips, waveform preview, LFO list, and volume faders scale to fill available space.
 - [x] One-shot LFOs: `loop` flag on `LfoClip` (default true). When false, the engine auto-removes the LFO after one full cycle. UI: **1×** button directly below Loop, same style. Active LFOs list: looping clips show no marker; one-shot clips show `[×1]` and disappear automatically when the cycle completes.
 - [x] Narrow layout: ~24% width reduction. Track strips 100→75px; pan dial 44→36px; volume digit font 40→26pt; fader 23→16px wide; preview 65→55px; LFO list 96→80px; track buttons 36→30px; transport buttons 44→38px; tighter margins and spacing throughout. Window minimum 700→535px.
