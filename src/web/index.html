@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>LFO Hero Remote</title>
+  <style>
+    :root {
+      --bg:     #111111;
+      --bg2:    #1c1c1c;
+      --bg3:    #2a2a2a;
+      --text:   #d8d8d8;
+      --dim:    #888888;
+      --accent: #4ec94e;
+      --c1:     #4477bb;
+      --c2:     #bb9933;
+      --c3:     #848c94;
+      --c4:     #ff6a00;
+      --red:    #c04040;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { background: var(--bg); }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, "SF Pro Text", system-ui, monospace;
+      font-size: 14px;
+      padding: 8px 8px env(safe-area-inset-bottom, 8px);
+      max-width: 480px;
+      margin: 0 auto;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    /* ── Status bar ───────────────────────────────────────────────────── */
+    #status-bar {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 0 8px;
+      font-size: 11px;
+      color: var(--dim);
+    }
+    #dot { font-size: 14px; color: var(--red); transition: color 0.3s; }
+    #dot.ok { color: var(--accent); }
+
+    /* ── Section card ─────────────────────────────────────────────────── */
+    .card {
+      background: var(--bg2);
+      border-radius: 10px;
+      padding: 10px 12px;
+      margin-bottom: 8px;
+    }
+    .card-label {
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: var(--dim);
+      margin-bottom: 10px;
+    }
+
+    /* ── Buttons ──────────────────────────────────────────────────────── */
+    button {
+      background: var(--bg3);
+      color: var(--text);
+      border: none;
+      border-radius: 7px;
+      font-size: 16px;
+      cursor: pointer;
+      padding: 10px 14px;
+      touch-action: manipulation;
+      user-select: none;
+      -webkit-user-select: none;
+      transition: opacity 0.1s;
+    }
+    button:active { opacity: 0.55; }
+    .btn-green { background: #1b3f1b; color: var(--accent); }
+    .btn-red   { background: #3f1b1b; color: var(--red); }
+
+    /* ── Transport ────────────────────────────────────────────────────── */
+    #transport {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 1fr;
+      gap: 6px;
+    }
+    #btn-play { font-size: 20px; }
+    #btn-play.playing { background: #1b3f1b; color: var(--accent); }
+
+    /* ── BPM ──────────────────────────────────────────────────────────── */
+    #bpm-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .bpm-adj {
+      font-size: 22px;
+      padding: 8px 16px;
+      border-radius: 7px;
+      flex-shrink: 0;
+    }
+    #bpm-input {
+      flex: 1;
+      background: var(--bg3);
+      color: var(--accent);
+      border: none;
+      border-radius: 7px;
+      font-size: 28px;
+      font-weight: bold;
+      text-align: center;
+      padding: 6px 0;
+      width: 0;                    /* flex will expand it */
+      -moz-appearance: textfield;
+    }
+    #bpm-input::-webkit-inner-spin-button,
+    #bpm-input::-webkit-outer-spin-button { -webkit-appearance: none; }
+
+    /* ── Track grid ───────────────────────────────────────────────────── */
+    .tracks-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+    .track-col { display: flex; flex-direction: column; align-items: stretch; gap: 6px; }
+
+    .mute-btn {
+      border-radius: 7px;
+      font-size: 15px;
+      font-weight: bold;
+      padding: 9px 4px;
+      color: #fff;
+      border: none;
+      cursor: pointer;
+      touch-action: manipulation;
+      transition: opacity 0.15s;
+    }
+    .mute-btn.muted { opacity: 0.28; }
+    .t1 { background: var(--c1); }
+    .t2 { background: var(--c2); }
+    .t3 { background: var(--c3); }
+    .t4 { background: var(--c4); }
+
+    /* vertical sliders — rotate trick for cross-browser vertical range */
+    .slider-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .slider-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 10px;
+      color: var(--dim);
+    }
+    input[type=range] {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 22px;
+      background: transparent;
+      padding: 0;
+      outline: none;
+    }
+    input[type=range]::-webkit-slider-runnable-track {
+      height: 4px;
+      background: var(--bg3);
+      border-radius: 2px;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: var(--accent);
+      margin-top: -8px;
+      cursor: pointer;
+    }
+    input[type=range].pan-slider::-webkit-slider-thumb { background: var(--dim); }
+    input[type=range]::-moz-range-track { height: 4px; background: var(--bg3); border-radius: 2px; }
+    input[type=range]::-moz-range-thumb {
+      width: 20px; height: 20px; border-radius: 50%;
+      background: var(--accent); border: none; cursor: pointer;
+    }
+    input[type=range].pan-slider::-moz-range-thumb { background: var(--dim); }
+
+    /* ── LFO panel ────────────────────────────────────────────────────── */
+    .lfo-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+    .lfo-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+
+    .field-label {
+      font-size: 10px;
+      color: var(--dim);
+      margin-bottom: 3px;
+    }
+    select, input[type=number] {
+      background: var(--bg3);
+      color: var(--text);
+      border: 1px solid #383838;
+      border-radius: 6px;
+      padding: 7px 8px;
+      font-size: 14px;
+      width: 100%;
+      -webkit-appearance: none;
+    }
+    select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23888'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 8px center; padding-right: 24px; }
+    input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; }
+
+    /* Track selector buttons */
+    .track-sel-row { display: flex; gap: 6px; margin-bottom: 8px; }
+    .sel-btn {
+      flex: 1;
+      padding: 9px 4px;
+      font-size: 14px;
+      font-weight: bold;
+      border-radius: 7px;
+      background: var(--bg3);
+      border: 2px solid transparent;
+      color: var(--dim);
+      transition: border-color 0.15s, background 0.15s, color 0.15s;
+    }
+    .sel-btn.active { color: #fff; }
+    .sel-btn.active.s1 { border-color: var(--c1); background: #4477bb22; color: var(--c1); }
+    .sel-btn.active.s2 { border-color: var(--c2); background: #bb993322; color: var(--c2); }
+    .sel-btn.active.s3 { border-color: var(--c3); background: #848c9422; color: var(--c3); }
+    .sel-btn.active.s4 { border-color: var(--c4); background: #ff6a0022; color: var(--c4); }
+    .sel-btn.active.sm { border-color: var(--accent); background: #4ec94e18; color: var(--accent); }
+
+    /* LFO start buttons */
+    .lfo-start-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .lfo-start-row button { font-size: 15px; padding: 11px 8px; }
+
+    /* ── Active LFO list ──────────────────────────────────────────────── */
+    #lfo-list { margin-bottom: 8px; min-height: 28px; }
+    .lfo-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      padding: 7px 8px;
+      background: var(--bg3);
+      border-radius: 6px;
+      margin-bottom: 5px;
+      font-size: 12px;
+      font-family: "SF Mono", ui-monospace, monospace;
+    }
+    .lfo-item-label { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .lfo-stop-btn {
+      flex-shrink: 0;
+      padding: 4px 10px;
+      font-size: 14px;
+      border-radius: 5px;
+      background: #3a2020;
+      color: var(--red);
+    }
+    #no-lfos { color: var(--dim); font-size: 12px; padding: 4px 0; }
+  </style>
+</head>
+<body>
+
+<!-- Status -->
+<div id="status-bar">
+  <span id="dot">●</span>
+  <span id="status-text">connecting…</span>
+</div>
+
+<!-- Transport + BPM -->
+<div class="card">
+  <div id="transport">
+    <button id="btn-play" onclick="cmd('play')">▶</button>
+    <button onclick="cmd('stop')">■</button>
+    <button onclick="cmd('tape_prev')" style="font-size:18px;">⟵</button>
+    <button onclick="cmd('tape_next')" style="font-size:18px;">⟶</button>
+  </div>
+  <div id="bpm-row">
+    <button class="bpm-adj" id="bpm-minus" onmousedown="startBpmRepeat(-1)" onmouseup="stopBpmRepeat()"
+            ontouchstart="startBpmRepeat(-1);event.preventDefault()" ontouchend="stopBpmRepeat()">−</button>
+    <input type="number" id="bpm-input" min="20" max="300" step="1" value="120"
+           onchange="cmd('set_bpm', {value: parseFloat(this.value) || 120})">
+    <button class="bpm-adj" id="bpm-plus" onmousedown="startBpmRepeat(1)" onmouseup="stopBpmRepeat()"
+            ontouchstart="startBpmRepeat(1);event.preventDefault()" ontouchend="stopBpmRepeat()">+</button>
+  </div>
+</div>
+
+<!-- Tracks -->
+<div class="card">
+  <div class="card-label">Tracks</div>
+  <div class="tracks-grid">
+    <!-- Track 1 -->
+    <div class="track-col">
+      <button class="mute-btn t1" id="mute-1" onclick="cmd('toggle_mute', {track:1})">1</button>
+      <div class="slider-wrap">
+        <div class="slider-label"><span>Vol</span><span id="vol-val-1">90</span></div>
+        <input type="range" id="vol-1" min="0" max="99" value="90"
+               oninput="onVol(1,this.value)" onchange="onVolChange(1,this.value)">
+      </div>
+      <div class="slider-wrap">
+        <div class="slider-label"><span>Pan</span><span id="pan-val-1">0</span></div>
+        <input type="range" class="pan-slider" id="pan-1" min="-63" max="63" value="0"
+               oninput="onPan(1,this.value)" onchange="onPanChange(1,this.value)">
+      </div>
+    </div>
+    <!-- Track 2 -->
+    <div class="track-col">
+      <button class="mute-btn t2" id="mute-2" onclick="cmd('toggle_mute', {track:2})">2</button>
+      <div class="slider-wrap">
+        <div class="slider-label"><span>Vol</span><span id="vol-val-2">90</span></div>
+        <input type="range" id="vol-2" min="0" max="99" value="90"
+               oninput="onVol(2,this.value)" onchange="onVolChange(2,this.value)">
+      </div>
+      <div class="slider-wrap">
+        <div class="slider-label"><span>Pan</span><span id="pan-val-2">0</span></div>
+        <input type="range" class="pan-slider" id="pan-2" min="-63" max="63" value="0"
+               oninput="onPan(2,this.value)" onchange="onPanChange(2,this.value)">
+      </div>
+    </div>
+    <!-- Track 3 -->
+    <div class="track-col">
+      <button class="mute-btn t3" id="mute-3" onclick="cmd('toggle_mute', {track:3})">3</button>
+      <div class="slider-wrap">
+        <div class="slider-label"><span>Vol</span><span id="vol-val-3">90</span></div>
+        <input type="range" id="vol-3" min="0" max="99" value="90"
+               oninput="onVol(3,this.value)" onchange="onVolChange(3,this.value)">
+      </div>
+      <div class="slider-wrap">
+        <div class="slider-label"><span>Pan</span><span id="pan-val-3">0</span></div>
+        <input type="range" class="pan-slider" id="pan-3" min="-63" max="63" value="0"
+               oninput="onPan(3,this.value)" onchange="onPanChange(3,this.value)">
+      </div>
+    </div>
+    <!-- Track 4 -->
+    <div class="track-col">
+      <button class="mute-btn t4" id="mute-4" onclick="cmd('toggle_mute', {track:4})">4</button>
+      <div class="slider-wrap">
+        <div class="slider-label"><span>Vol</span><span id="vol-val-4">90</span></div>
+        <input type="range" id="vol-4" min="0" max="99" value="90"
+               oninput="onVol(4,this.value)" onchange="onVolChange(4,this.value)">
+      </div>
+      <div class="slider-wrap">
+        <div class="slider-label"><span>Pan</span><span id="pan-val-4">0</span></div>
+        <input type="range" class="pan-slider" id="pan-4" min="-63" max="63" value="0"
+               oninput="onPan(4,this.value)" onchange="onPanChange(4,this.value)">
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- LFO -->
+<div class="card">
+  <div class="card-label">LFO</div>
+
+  <div class="lfo-grid-2">
+    <div>
+      <div class="field-label">Wave</div>
+      <select id="lfo-wave">
+        <option value="sine">sine</option>
+        <option value="triangle">triangle</option>
+        <option value="saw">saw</option>
+        <option value="square">square</option>
+        <option value="log">log</option>
+        <option value="exp">exp</option>
+        <option value="sweep up">sweep up</option>
+        <option value="sweep dn">sweep down</option>
+        <option value="random">random</option>
+      </select>
+    </div>
+    <div>
+      <div class="field-label">Parameter</div>
+      <select id="lfo-param">
+        <option>volume</option>
+        <option>pan</option>
+        <option>mute</option>
+        <option>tempo</option>
+        <option>fx 1</option>
+        <option>fx 2</option>
+        <option>fx 3</option>
+        <option>fx 4</option>
+        <option>lfo 1</option>
+        <option>lfo 2</option>
+        <option>lfo 3</option>
+        <option>lfo 4</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="lfo-grid-3">
+    <div>
+      <div class="field-label">Rate (1–8)</div>
+      <input type="number" id="lfo-rate" min="1" max="8" step="1" value="3">
+    </div>
+    <div>
+      <div class="field-label">Depth (0–99)</div>
+      <input type="number" id="lfo-depth" min="0" max="99" step="1" value="25">
+    </div>
+    <div>
+      <div class="field-label">Center (0–99)</div>
+      <input type="number" id="lfo-center" min="0" max="99" step="1" value="90">
+    </div>
+  </div>
+
+  <!-- Track selectors -->
+  <div class="track-sel-row">
+    <button class="sel-btn s1" data-t="1" onclick="toggleSel(1)">1</button>
+    <button class="sel-btn s2" data-t="2" onclick="toggleSel(2)">2</button>
+    <button class="sel-btn s3" data-t="3" onclick="toggleSel(3)">3</button>
+    <button class="sel-btn s4" data-t="4" onclick="toggleSel(4)">4</button>
+    <button class="sel-btn sm" data-t="M" onclick="toggleSel('M')">M</button>
+  </div>
+
+  <div class="lfo-start-row">
+    <button class="btn-green" onclick="lfoStart(true)">∞ Loop</button>
+    <button onclick="lfoStart(false)">1× One-shot</button>
+  </div>
+</div>
+
+<!-- Active LFOs -->
+<div class="card">
+  <div class="card-label">Active LFOs</div>
+  <div id="lfo-list"><div id="no-lfos">no active LFOs</div></div>
+  <button class="btn-red" style="width:100%;" onclick="cmd('lfo_stop_all')">⌫ Stop All</button>
+</div>
+
+<script>
+  // ── State ─────────────────────────────────────────────────────────────────
+  let state = { bpm: 120.0, is_playing: false, tracks: [{},{},{},{}], lfos: [] };
+  let ws = null;
+  let currentBpm = 120.0;
+  let selectedTracks = new Set([1]);   // default: track 1 selected
+  let bpmRepeatTimer = null;
+  let volDebounce = {};
+  let panDebounce = {};
+  let skipSliderUpdate = {};           // track → timestamp while slider is being dragged
+
+  // ── WebSocket ─────────────────────────────────────────────────────────────
+  function connect() {
+    const url = `ws://${location.host}/ws`;
+    ws = new WebSocket(url);
+    ws.onopen = () => {
+      document.getElementById('dot').className = 'ok';
+      document.getElementById('status-text').textContent = `connected · ${location.host}`;
+    };
+    ws.onmessage = (e) => {
+      try { state = JSON.parse(e.data); } catch (_) { return; }
+      render();
+    };
+    ws.onclose = () => {
+      document.getElementById('dot').className = '';
+      document.getElementById('status-text').textContent = 'disconnected — retrying…';
+      setTimeout(connect, 2000);
+    };
+    ws.onerror = () => ws.close();
+  }
+
+  function send(obj) {
+    if (ws && ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify(obj));
+  }
+
+  function cmd(command, extra) {
+    send({ cmd: command, ...extra });
+  }
+
+  // ── Render ────────────────────────────────────────────────────────────────
+  function render() {
+    // BPM — don't overwrite if the input is focused
+    if (document.activeElement !== document.getElementById('bpm-input')) {
+      currentBpm = state.bpm;
+      document.getElementById('bpm-input').value = state.bpm.toFixed(1);
+    }
+
+    // Play button highlight
+    document.getElementById('btn-play').classList.toggle('playing', !!state.is_playing);
+
+    // Tracks
+    for (let i = 0; i < 4; i++) {
+      const t = i + 1;
+      const tr = state.tracks[i] || {};
+
+      document.getElementById(`mute-${t}`).classList.toggle('muted', !!tr.muted);
+
+      const vol = tr.volume ?? 90;
+      document.getElementById(`vol-val-${t}`).textContent = vol;
+      const volSlider = document.getElementById(`vol-${t}`);
+      if (!skipSliderUpdate[`v${t}`]) volSlider.value = vol;
+
+      const pan = tr.pan ?? 0;
+      document.getElementById(`pan-val-${t}`).textContent =
+        pan === 0 ? '0' : (pan > 0 ? `+${pan}` : pan);
+      const panSlider = document.getElementById(`pan-${t}`);
+      if (!skipSliderUpdate[`p${t}`]) panSlider.value = pan;
+    }
+
+    // LFO list
+    renderLfoList();
+  }
+
+  const RATE_LABELS = ['16b', '8b', '4b', '2b', '1b', '2×', '4×', '8×'];
+
+  function renderLfoList() {
+    const list = document.getElementById('lfo-list');
+    list.innerHTML = '';
+    if (state.lfos.length === 0) {
+      list.innerHTML = '<div id="no-lfos">no active LFOs</div>';
+      return;
+    }
+    for (const lfo of state.lfos) {
+      const trackLabel = lfo.track === 0 ? 'M' : `tr${lfo.track}`;
+      const rateLabel  = RATE_LABELS[(lfo.rate || 3) - 1] || '?';
+      const loopLabel  = lfo.loop ? '∞' : '1×';
+      const invLabel   = lfo.inverted ? ' [inv]' : '';
+
+      const div = document.createElement('div');
+      div.className = 'lfo-item';
+      const label = document.createElement('span');
+      label.className = 'lfo-item-label';
+      label.textContent = `${lfo.wave} · ${lfo.parameter} · ${trackLabel} · ${rateLabel} ${loopLabel}${invLabel}`;
+      const stopBtn = document.createElement('button');
+      stopBtn.className = 'lfo-stop-btn';
+      stopBtn.textContent = '×';
+      const lfoId = lfo.id;
+      stopBtn.onclick = () => cmd('lfo_stop', { id: lfoId });
+      div.appendChild(label);
+      div.appendChild(stopBtn);
+      list.appendChild(div);
+    }
+  }
+
+  // ── BPM control ───────────────────────────────────────────────────────────
+  function adjustBpm(delta) {
+    currentBpm = Math.max(20, Math.min(300, Math.round((currentBpm + delta) * 10) / 10));
+    document.getElementById('bpm-input').value = currentBpm.toFixed(1);
+    cmd('set_bpm', { value: currentBpm });
+  }
+
+  function startBpmRepeat(delta) {
+    adjustBpm(delta);
+    bpmRepeatTimer = setTimeout(() => {
+      bpmRepeatTimer = setInterval(() => adjustBpm(delta), 80);
+    }, 350);
+  }
+
+  function stopBpmRepeat() {
+    clearTimeout(bpmRepeatTimer);
+    clearInterval(bpmRepeatTimer);
+    bpmRepeatTimer = null;
+  }
+
+  // ── Volume sliders ────────────────────────────────────────────────────────
+  function onVol(track, value) {
+    const v = parseInt(value);
+    document.getElementById(`vol-val-${track}`).textContent = v;
+    skipSliderUpdate[`v${track}`] = true;
+    clearTimeout(volDebounce[track]);
+    volDebounce[track] = setTimeout(() => {
+      cmd('set_volume', { track, value: v });
+    }, 40);
+  }
+  function onVolChange(track, value) {
+    skipSliderUpdate[`v${track}`] = false;
+    cmd('set_volume', { track, value: parseInt(value) });
+  }
+
+  // ── Pan sliders ───────────────────────────────────────────────────────────
+  function onPan(track, value) {
+    const v = parseInt(value);
+    const label = v === 0 ? '0' : (v > 0 ? `+${v}` : v);
+    document.getElementById(`pan-val-${track}`).textContent = label;
+    skipSliderUpdate[`p${track}`] = true;
+    clearTimeout(panDebounce[track]);
+    panDebounce[track] = setTimeout(() => {
+      cmd('set_pan', { track, value: v });
+    }, 40);
+  }
+  function onPanChange(track, value) {
+    skipSliderUpdate[`p${track}`] = false;
+    cmd('set_pan', { track, value: parseInt(value) });
+  }
+
+  // ── Track selection ───────────────────────────────────────────────────────
+  function toggleSel(t) {
+    if (selectedTracks.has(t)) {
+      selectedTracks.delete(t);
+    } else {
+      selectedTracks.add(t);
+    }
+    refreshSelButtons();
+  }
+
+  function refreshSelButtons() {
+    document.querySelectorAll('.sel-btn').forEach(btn => {
+      const t = btn.dataset.t === 'M' ? 'M' : parseInt(btn.dataset.t);
+      btn.classList.toggle('active', selectedTracks.has(t));
+    });
+  }
+
+  // ── LFO start ─────────────────────────────────────────────────────────────
+  function lfoStart(loop) {
+    const wave  = document.getElementById('lfo-wave').value;
+    const param = document.getElementById('lfo-param').value;
+    const rate  = Math.max(1, Math.min(8, parseInt(document.getElementById('lfo-rate').value) || 3));
+    const depth  = parseFloat(document.getElementById('lfo-depth').value)  || 25;
+    const center = parseFloat(document.getElementById('lfo-center').value) || 90;
+
+    // Determine tracks list: numeric tracks or [0] for master (M)
+    let tracks = [];
+    if (selectedTracks.has('M')) {
+      tracks = [0];
+    } else {
+      tracks = [...selectedTracks].filter(t => typeof t === 'number').sort();
+      if (tracks.length === 0) tracks = [1];
+    }
+
+    cmd('lfo_start', { wave, parameter: param, rate, depth, center, tracks, loop });
+  }
+
+  // ── Init ──────────────────────────────────────────────────────────────────
+  // Set default track-1 button to active
+  document.querySelector('[data-t="1"]').classList.add('active');
+
+  connect();
+</script>
+</body>
+</html>

@@ -8,6 +8,7 @@ Run with:
 
 import logging
 import signal
+import socket
 import sys
 
 import mido
@@ -19,6 +20,7 @@ from src.clock import ClockListener, MidiClockGenerator, SMOOTH_N
 from src.controller import Controller
 from src.automation import AutomationEngine, Parameter
 from src.ui import MainWindow, ClockBridge, apply_dark_theme
+from src.server import RemoteServer, PORT as REMOTE_PORT
 
 
 class _NullPort:
@@ -105,6 +107,19 @@ def main() -> None:
         tick_callback=engine.on_tick,
         beat_callback=on_beat,
     )
+
+    # ── Remote control server ───────────────────────────────────────────────
+    remote = RemoteServer(controller, clock_gen, engine)
+    remote.start()
+    try:
+        _s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        _s.connect(("8.8.8.8", 80))
+        _local_ip = _s.getsockname()[0]
+        _s.close()
+    except Exception:
+        _local_ip = "localhost"
+    print(f"Remote control: http://{_local_ip}:{REMOTE_PORT}/")
+    # ───────────────────────────────────────────────────────────────────────
 
     def on_slave_tick(tick_count: int, beat_count: int) -> None:
         # Only drive the engine from the slave clock when the master clock is
