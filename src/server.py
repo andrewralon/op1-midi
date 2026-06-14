@@ -81,7 +81,7 @@ class RemoteServer:
 
         # Local volume/pan state in MIDI units — init to app defaults
         # (controller doesn't track sent values; we mirror them here)
-        self._vol: dict[int, int] = {t: 115 for t in (1, 2, 3, 4)}  # MIDI 115 ≈ display 90
+        self._vol: dict[int, int] = {t: 116 for t in (1, 2, 3, 4)}  # MIDI 116 = display 90
         self._pan: dict[int, int] = {t: 64  for t in (1, 2, 3, 4)}  # MIDI 64 = center
 
         self._clients: set[WebSocket] = set()
@@ -95,6 +95,21 @@ class RemoteServer:
         @app.get("/")
         async def index() -> FileResponse:
             return FileResponse(str(_WEB_DIR / "index.html"))
+
+        @app.get("/manifest.json")
+        async def manifest():
+            from fastapi.responses import Response
+            data = json.dumps({
+                "name": "LFO Hero Remote",
+                "short_name": "LFO Hero",
+                "start_url": "/",
+                "display": "standalone",
+                "background_color": "#111111",
+                "theme_color": "#111111",
+                "orientation": "portrait",
+                "icons": [],
+            })
+            return Response(content=data, media_type="application/manifest+json")
 
         @app.websocket("/ws")
         async def ws_endpoint(ws: WebSocket) -> None:
