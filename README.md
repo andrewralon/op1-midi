@@ -25,6 +25,14 @@ python -m src.app
 
 The app auto-detects the OP-1 by port name (looks for "op-1" case-insensitively). If exactly one OP-1 port is found it is selected automatically. If multiple OP-1 ports are detected (e.g. USB and Bluetooth both connected) you will be prompted to choose from the full port list.
 
+On startup the terminal also prints a remote control URL:
+
+```
+Remote control: http://192.168.x.x:8765/
+```
+
+Open that address in **Safari on your iPhone** (same WiFi network required) to get a mobile control surface — BPM, transport, per-track volume/pan/mute, and LFO controls. No app install needed.
+
 ### Bluetooth MIDI
 
 Bluetooth LE MIDI is supported alongside USB. When the connected port name contains "Bluetooth" the status bar appends **(bt)** with a tooltip noting the ~15ms additional latency. BPM smoothing doubles automatically to absorb BLE jitter. Note that Tempo LFO requires the app to be clock master and is unavailable over Bluetooth.
