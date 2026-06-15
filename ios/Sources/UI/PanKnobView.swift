@@ -25,13 +25,13 @@ struct PanKnobView: View {
                     .fill(Color(hex: "#1c1c1e"))
 
                 Circle()
-                    .stroke(Color(hex: "#484848"), lineWidth: 1)
+                    .stroke(Color(hex: "#aaaaaa"), lineWidth: 1)
 
                 // L/R limit ticks at ±130° from 12 o'clock
                 limitTick(cx: cx, cy: cy, r: r, deg: -90 - 130)
-                    .stroke(Color.white.opacity(0.22), lineWidth: 1.5)
+                    .stroke(Color(hex: "#aaaaaa"), lineWidth: 1.5)
                 limitTick(cx: cx, cy: cy, r: r, deg: -90 + 130)
-                    .stroke(Color.white.opacity(0.22), lineWidth: 1.5)
+                    .stroke(Color(hex: "#aaaaaa"), lineWidth: 1.5)
 
                 // Indicator — green at center (matches desktop), white off-center
                 Path { p in

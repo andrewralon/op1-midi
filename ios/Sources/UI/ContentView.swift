@@ -19,6 +19,7 @@ struct ContentView: View {
         }
         .background(C.bg)
         .preferredColorScheme(.dark)
+        .ignoresSafeArea(edges: .bottom)
     }
 }
 

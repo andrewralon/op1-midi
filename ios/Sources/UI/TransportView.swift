@@ -25,17 +25,16 @@ struct TransportBarView: View {
                     Image(systemName: "metronome")
                         .font(.system(size: 32, weight: .regular))
                         .scaleEffect(x: 0.65, y: 1.22, anchor: .center)
+                        .foregroundColor(app.isClockMaster ? C.green : C.dim)
                     Text(app.isClockMaster ? "app" : "op1")
-                        .font(.system(size: 8, weight: .semibold, design: .monospaced))
+                        .font(.system(size: 11, weight: .semibold, design: .monospaced))
+                        .foregroundColor(app.isClockMaster ? C.green : C.track(1))
                 }
                 .frame(width: 48)
                 .frame(maxHeight: .infinity)
                 .background(app.isClockMaster ? C.green.opacity(0.18) : Color.clear)
-                .foregroundColor(app.isClockMaster ? C.green : C.dim)
             }
             .buttonStyle(.plain)
-
-            Sep()
 
             // BPM: − value +
             Button { app.setBpm(app.bpm - 1) } label: {

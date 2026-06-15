@@ -6,7 +6,7 @@ struct VolumeFaderView: View {
     @Binding var value: Double  // 0-99
     let onChange: (Double) -> Void
 
-    private let trackW: CGFloat    = 3
+    private let trackW: CGFloat    = 6
     private let thumbSize: CGFloat = 14  // square rotated 45° = perfect ◇
 
     @GestureState private var drag: CGFloat = 0

@@ -60,11 +60,11 @@ struct LFOPanelView: View {
             // ── 2. Param + wave dropdowns — fitted width, centered ────────────
             HStack(spacing: 6) {
                 Spacer()
-                Image(systemName: "umbrella").font(.system(size: 16)).foregroundColor(Color(hex: "#aaaaaa"))
+                Image(systemName: "umbrella").font(.system(size: 20)).foregroundColor(Color(hex: "#aaaaaa"))
                 CompactPicker(options: Array(Parameter.allCases),
                               selection: $app.lfoParam)
                 Spacer()
-                Image(systemName: "waveform.path").font(.system(size: 16)).foregroundColor(Color(hex: "#aaaaaa"))
+                Image(systemName: "waveform.path").font(.system(size: 20)).foregroundColor(Color(hex: "#aaaaaa"))
                 CompactPicker(options: Array(LfoWave.allCases),
                               selection: $app.lfoWave)
                 Spacer()
@@ -80,7 +80,7 @@ struct LFOPanelView: View {
                 // Rate stepper
                 HStack(spacing: 6) {
                     Image(systemName: "timer")
-                        .font(.system(size: 17))
+                        .font(.system(size: 20))
                         .foregroundColor(Color(hex: "#aaaaaa"))
 
                     HStack(spacing: 0) {
@@ -111,7 +111,7 @@ struct LFOPanelView: View {
                 // Depth
                 HStack(spacing: 6) {
                     Image(systemName: "arrow.up.and.down")
-                        .font(.system(size: 17))
+                        .font(.system(size: 20))
                         .foregroundColor(Color(hex: "#aaaaaa"))
 
                     ScrubValue(value: $app.lfoDepth, range: 0...99)
@@ -123,7 +123,7 @@ struct LFOPanelView: View {
                 // Center
                 HStack(spacing: 6) {
                     Image(systemName: "arrow.up.and.down.circle")
-                        .font(.system(size: 17))
+                        .font(.system(size: 20))
                         .foregroundColor(Color(hex: "#aaaaaa"))
 
                     ScrubValue(value: $app.lfoCenter, range: 0...99)
@@ -172,7 +172,7 @@ struct LFOPanelView: View {
             HStack(spacing: 8) {
                 Button { app.lfoStart(loop: true) } label: {
                     Label("repeat", systemImage: "repeat")
-                        .font(.system(size: 11, weight: .medium))
+                        .font(.system(size: 14, weight: .medium))
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 9)
                         .background(C.green.opacity(0.25))
@@ -183,7 +183,7 @@ struct LFOPanelView: View {
 
                 Button { app.lfoStart(loop: false) } label: {
                     Label("1x shot", systemImage: "play.circle")
-                        .font(.system(size: 11, weight: .medium))
+                        .font(.system(size: 14, weight: .medium))
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 9)
                         .background(C.bg3)
@@ -194,7 +194,7 @@ struct LFOPanelView: View {
 
                 Button { app.stopAllLfos(); selectedLfoID = nil } label: {
                     Label("delete all", systemImage: "xmark.circle")
-                        .font(.system(size: 11, weight: .medium))
+                        .font(.system(size: 14, weight: .medium))
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 9)
                         .background(C.red.opacity(0.18))
